@@ -1,0 +1,5 @@
+@font-face {
+    font-family: "Domine";
+    src: url("/fonts/Domine.ttf") format("truetype");
+    font-display: swap;
+}
