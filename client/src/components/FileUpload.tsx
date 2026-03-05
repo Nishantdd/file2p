@@ -1,5 +1,6 @@
 import type { TargetedDragEvent, TargetedEvent } from "preact";
 import { useState, useRef } from "preact/hooks";
+import { generateQR } from "../utils/qr";
 
 function Button({
   children,
@@ -31,6 +32,7 @@ function Button({
 export function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [shareQR, setShareQR] = useState("");
   const [shareLink, setShareLink] = useState("");
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,11 +54,13 @@ export function FileUpload() {
     if (files && files.length > 0) handleFileSelect(files[0]);
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
     const mockLink = `https://papershare.app/share/${Math.random()
       .toString(36)
       .substring(2, 10)}`;
+    const qrSvg = await generateQR(mockLink);
+    setShareQR(qrSvg);
     setShareLink(mockLink);
   };
 
@@ -68,7 +72,7 @@ export function FileUpload() {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 500);
   };
 
   const handleReset = () => {
@@ -124,99 +128,91 @@ export function FileUpload() {
           </div>
         </div>
       ) : (
-        <div className="w-full border border-border rounded-lg p-8 space-y-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-foreground/10 flex items-center justify-center shrink-0">
-              {/* File Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 text-muted-foreground"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
-                <path d="M4 16v4h16v-4" />
-              </svg>
+        <>
+          <div className="w-full border rounded-lg p-4 grid grid-cols-[1fr_1px_auto] gap-4 items-stretch">
+            <div className="flex flex-col justify-between gap-4 min-w-0">
+              <div className="flex flex-col min-w-0">
+                <h3 className="text-xl truncate">{selectedFile.name}</h3>
+                <p>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+              <div className="grid grid-cols-[1fr_auto] w-full min-w-0">
+                <input
+                  type="text"
+                  value={shareLink}
+                  readOnly
+                  className="w-full p-2 bg-dark-background border border-r-0 rounded-l-lg focus:outline-none"
+                />
+                <button
+                  onClick={handleCopy}
+                  className="flex cursor-pointer hover:bg-dark-background transition-color duration-200 items-center justify-center px-3 border rounded-r-lg hover:bg-muted"
+                >
+                  <div className="relative h-4 w-4">
+                    <svg
+                      className="h-4 w-4 absolute inset-0"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        transition:
+                          "opacity 400ms cubic-bezier(0.34, 1.56, 0.64, 1), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        opacity: copied ? 1 : 0,
+                        transform: copied ? "scale(1)" : "scale(0.4)",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M20 6L9 17l-5-5"
+                      />
+                    </svg>
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        transition:
+                          "opacity 400ms cubic-bezier(0.34, 1.56, 0.64, 1), transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        opacity: copied ? 0 : 1,
+                        transform: copied ? "scale(0.4)" : "scale(1)",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <g
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      >
+                        <rect
+                          width="14"
+                          height="14"
+                          x="8"
+                          y="8"
+                          rx="2"
+                          ry="2"
+                        />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                      </g>
+                    </svg>
+                  </div>
+                </button>
+              </div>
             </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className="text-xl mb-1">{selectedFile.name}</h3>
-              <p className="text-muted-foreground">
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              {/* Link Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L10 5" />
-                <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L14 19" />
-              </svg>
-              <span style={{ fontFamily: "'Inter', sans-serif" }}>
-                Share Link
-              </span>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={shareLink}
-                readOnly
-                className="flex-1 px-4 py-2 bg-input-background border border-border rounded-lg focus:outline-none"
+            <div className="bg-border w-px"></div>
+            <div className="flex items-center justify-center aspect-square w-32 overflow-hidden rounded-xl border-4 shadow-2xl">
+              <div
+                className="[&>svg]:w-full [&>svg]:h-full"
+                dangerouslySetInnerHTML={{ __html: shareQR }}
               />
-
-              <Button onClick={handleCopy} variant="outline">
-                {copied ? (
-                  <>
-                    {/* Check */}
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    {/* Copy */}
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                    Copy
-                  </>
-                )}
-              </Button>
             </div>
           </div>
-
-          <div className="pt-4 border-t border-dotted border-border">
-            <Button onClick={handleReset} variant="ghost">
-              Share Another File
-            </Button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

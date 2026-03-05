@@ -14,6 +14,10 @@
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^5.17.1",
     "preact": "^10.28.4",
+    "qrcode": "^1.5.4",
     "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6"
   }
 }
