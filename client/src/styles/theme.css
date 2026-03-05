@@ -4,6 +4,7 @@
   --color-accent: var(--accent);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-dark-background: var(--dark-background);
   --color-muted-foreground: var(--muted-foreground);
   --color-placeholder: var(--placeholder);
   --color-border: var(--border);
@@ -12,7 +13,7 @@
 :root {
   --accent: #d97757;
   --background: #262624;
-  --foreground: #faf9f5;
+  --dark-background: #1f1e1d;
   --muted-foreground: #c2c0b6;
   --placeholder: #9c9a92;
   --border: #41413e;
