@@ -1,18 +1,18 @@
-@import "tailwindcss";
 @import "./fonts.css";
 @import "./theme.css";
+@import "tailwindcss";
 
 @layer base {
-    * {
-        @apply border-border;
-    }
+  * {
+    @apply border-border;
+  }
 
-    body {
-        @apply bg-background text-muted-foreground;
-        font-family: "Domine";
-    }
+  body {
+    @apply bg-background text-muted-foreground;
+    font-family: "Crimson Pro", serif;
+  }
 
-    ::selection {
-        background-color: var(--selection);
-    }
+  ::selection {
+    background-color: var(--selection);
+  }
 }

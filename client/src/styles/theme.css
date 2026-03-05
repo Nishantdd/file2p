@@ -1,16 +1,20 @@
 @theme inline {
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-placeholder: var(--placeholder);
-    --color-border: var(--border);
+  --font-sans: "Inter";
+  --font-serif: "Crimson Pro";
+  --color-accent: var(--accent);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder: var(--placeholder);
+  --color-border: var(--border);
 }
 
 :root {
-    --background: #262624;
-    --foreground: #faf9f5;
-    --muted-foreground: #c2c0b6;
-    --placeholder: #9c9a92;
-    --border: #41413e;
-    --selection: #284570;
+  --accent: #d97757;
+  --background: #262624;
+  --foreground: #faf9f5;
+  --muted-foreground: #c2c0b6;
+  --placeholder: #9c9a92;
+  --border: #41413e;
+  --selection: #284570;
 }

@@ -1,5 +1,1 @@
-@font-face {
-    font-family: "Domine";
-    src: url("/fonts/Domine.ttf") format("truetype");
-    font-display: swap;
-}
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap");
