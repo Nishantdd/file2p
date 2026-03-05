@@ -5,6 +5,7 @@ type SocketData = {
 };
 
 const transferMap = new Map<string, Bun.ServerWebSocket<SocketData>>();
+const leecherSocketMap = new Map<string, Bun.ServerWebSocket<SocketData>>();
 
 const server = Bun.serve({
   port: 8000,
@@ -26,19 +27,34 @@ const server = Bun.serve({
       if (ws.data.role === "host") {
         transferMap.set(ws.data.transferId, ws);
       } else {
-        const hostWebSocket = transferMap.get(ws.data.transferId)!;
-        hostWebSocket.send(
-          JSON.stringify({ type: "message", from: ws.data.peerId }),
+        leecherSocketMap.set(ws.data.transferId, ws);
+        ws.send(
+          JSON.stringify({
+            filename: "Screenshot (1).png",
+            filesize: 12399,
+          }),
         );
       }
     },
 
     message(ws, raw) {
       const msg = JSON.parse(raw as string);
+      console.log(msg);
+      // if (msg.type == "metadata") {
+      //   const leecherSocket = leecherSocketMap.get(ws.data.transferId)!;
+      //   leecherSocket.send(
+      //     JSON.stringify({
+      //       type: "message",
+      //       filename: msg.filename,
+      //       filesize: msg.filesize,
+      //     }),
+      // );
+      // }
     },
 
     close(ws) {
       transferMap.delete(ws.data.transferId);
+      leecherSocketMap.delete(ws.data.transferId);
     },
   },
 });
