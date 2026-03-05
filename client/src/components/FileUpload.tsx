@@ -1,41 +1,34 @@
 import type { TargetedDragEvent, TargetedEvent } from "preact";
-import { useState, useRef } from "preact/hooks";
+import { useState, useRef, useEffect } from "preact/hooks";
 import { generateQR } from "../utils/qr";
-
-function Button({
-  children,
-  onClick,
-  variant = "default",
-  className = "",
-  ...props
-}: any) {
-  const base =
-    "px-4 py-2 font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-colors";
-
-  const variants: Record<string, string> = {
-    default: "bg-foreground text-background hover:opacity-90",
-    outline: "border border-border hover:bg-foreground/10",
-    ghost: "text-muted-foreground hover:text-foreground",
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${base} ${variants[variant]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [shareQR, setShareQR] = useState("");
   const [shareLink, setShareLink] = useState("");
+  const [transferId, setTransferId] = useState("");
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!selectedFile || !transferId) return;
+    const socket = new WebSocket(
+      `ws://localhost:8000?role=host&transferId=${transferId}`,
+    );
+
+    socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: "metadata",
+          filename: selectedFile.name,
+          filesize: selectedFile.size,
+        }),
+      );
+    };
+
+    return () => socket.close();
+  }, [selectedFile, transferId]);
 
   const handleDragOver = (e: TargetedDragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -56,10 +49,10 @@ export function FileUpload() {
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
-    const mockLink = `https://papershare.app/share/${Math.random()
-      .toString(36)
-      .substring(2, 10)}`;
+    const transferId = Math.random().toString(36).substring(2, 10);
+    const mockLink = `http://localhost:4321/receive?transferId=${transferId}`;
     const qrSvg = await generateQR(mockLink);
+    setTransferId(transferId);
     setShareQR(qrSvg);
     setShareLink(mockLink);
   };
