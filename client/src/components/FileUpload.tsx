@@ -101,7 +101,6 @@ export function FileUpload() {
             onChange={handleFileInputChange}
             className="hidden"
           />
-
           <div className="flex flex-col items-center gap-6 text-center">
             <svg
               width="24"
@@ -140,7 +139,7 @@ export function FileUpload() {
                   type="text"
                   value={shareLink}
                   readOnly
-                  className="w-full p-2 bg-dark-background border border-r-0 rounded-l-lg focus:outline-none"
+                  className="w-full p-2 font-sans bg-dark-background border border-r-0 rounded-l-lg focus:outline-none"
                 />
                 <button
                   onClick={handleCopy}
