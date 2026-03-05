@@ -1,0 +1,43 @@
+---
+const steps = [
+  {
+    number: "01",
+    title: "Select Your File",
+    description:
+      "Choose any file from your device. No size limits, no restrictions.",
+  },
+  {
+    number: "02",
+    title: "Get Your Link",
+    description: "Instantly receive a unique, shareable link for your file.",
+  },
+  {
+    number: "03",
+    title: "Share & Connect",
+    description:
+      "Send the link to anyone. When they open it, a direct connection is established.",
+  },
+  {
+    number: "04",
+    title: "Transfer Complete",
+    description:
+      "Files transfer directly between peers. Fast, secure, and private.",
+  },
+];
+---
+
+<section id="how-it-works" class="border-b border-border">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+    {
+      steps.map((step, index) => (
+        <div class={`p-16 ${index < steps.length - 1 ? "border-r " : ""}`}>
+          <div class="space-y-4">
+            <div class="text-6xl opacity-20">{step.number}</div>
+            <h3 class="text-xl font-medium text-foreground">{step.title}</h3>
+            <p class="leading-relaxed">{step.description}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>

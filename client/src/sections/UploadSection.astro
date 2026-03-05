@@ -1,0 +1,30 @@
+---
+import ArrowRightIcon from "@lucide/astro/icons/arrow-right";
+---
+
+<section class="h-screen pt-16 flex border-b">
+  <div class="grid grid-cols-2 divide-x">
+    <div class="flex items-center">
+      <div
+        class="mx-16 h-42 w-full flex items-center justify-center border rounded-lg border-dashed"
+      >
+        Drop files here
+      </div>
+    </div>
+    <div class="mx-16 flex flex-col justify-center items-start gap-8">
+      <div class="flex flex-wrap text-7xl/tight font-medium text-foreground">
+        <div>File sharing,&nbsp;</div>
+        <div>reimagined.</div>
+      </div>
+      <div class="text-xl/normal">
+        Send files directly to anyone, anywhere. No accounts, no uploads, no
+        limits. Just pure peer-to-peer transfer at the speed of your connection.
+      </div>
+      <a
+        href="#features"
+        class="flex items-center justify-center gap-2 font-sans hover:text-foreground border-b border-muted-foreground border-dotted hover:border-foreground"
+        >Learn more <ArrowRightIcon size={18} /></a
+      >
+    </div>
+  </div>
+</section>

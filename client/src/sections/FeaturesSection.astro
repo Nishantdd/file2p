@@ -1,0 +1,47 @@
+---
+import Shield from "@lucide/astro/icons/shield";
+import Zap from "@lucide/astro/icons/zap";
+import Globe from "@lucide/astro/icons/globe";
+
+const features = [
+  {
+    icon: Shield,
+    title: "Secure & Private",
+    description:
+      "End-to-end encrypted transfers. Your files never touch our servers, ensuring complete privacy and security.",
+  },
+  {
+    icon: Zap,
+    title: "Lightning Fast",
+    description:
+      "Direct peer-to-peer connection means faster transfers. No upload limits, no waiting for server processing.",
+  },
+  {
+    icon: Globe,
+    title: "Works Everywhere",
+    description:
+      "Share files across any device or platform. Works in your browser, no installation required.",
+  },
+];
+---
+
+<section id="features" class="border-b border-border">
+  <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x">
+    {
+      features.map((feature, index) => {
+        const Icon = feature.icon;
+        return (
+          <div class="p-16 space-y-4">
+            <div class="w-12 h-12 rounded-lg bg-foreground/10 border border-border flex items-center justify-center">
+              <Icon class="w-6 h-6 text-foreground" />
+            </div>
+            <h3 class="text-2xl text-foreground font-medium">
+              {feature.title}
+            </h3>
+            <p class="leading-relaxed">{feature.description}</p>
+          </div>
+        );
+      })
+    }
+  </div>
+</section>
