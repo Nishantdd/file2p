@@ -1,0 +1,18 @@
+---
+import { FileReceive } from "../components/FileReceive";
+---
+
+<section class="min-h-screen pt-16 flex border-b">
+  <div class="grid grid-cols-2 divide-x">
+    <div class="flex items-center">
+      <FileReceive client:load />
+    </div>
+    <div class="mx-16 flex flex-col justify-center items-start gap-8">
+      <div class="text-6xl/none font-medium text-foreground">Receive Files</div>
+      <div class="text-xl/normal">
+        You are about to start a secure transfer via WebRTC, directly from the
+        sender. Click download to start receiving the file(s).
+      </div>
+    </div>
+  </div>
+</section>
