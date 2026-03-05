@@ -1,15 +1,12 @@
 ---
 import ArrowRightIcon from "@lucide/astro/icons/arrow-right";
+import { FileUpload } from "../components/FileUpload";
 ---
 
 <section class="h-screen pt-16 flex border-b">
   <div class="grid grid-cols-2 divide-x">
     <div class="flex items-center">
-      <div
-        class="mx-16 h-42 w-full flex items-center justify-center border rounded-lg border-dashed"
-      >
-        Drop files here
-      </div>
+      <FileUpload client:load />
     </div>
     <div class="mx-16 flex flex-col justify-center items-start gap-8">
       <div class="flex flex-wrap text-7xl/tight font-medium text-foreground">
