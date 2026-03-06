@@ -9,15 +9,18 @@ export function FileUpload() {
   const [shareLink, setShareLink] = useState("");
   const [transferId, setTransferId] = useState("");
   const [copied, setCopied] = useState(false);
-  const [peer, setPeer] = useState<RTCPeerConnection | null>(null);
-
+  const peerRef = useRef<RTCPeerConnection | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const peer = new RTCPeerConnection({
+    peerRef.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
-    setPeer(peer);
+
+    return () => {
+      peerRef.current?.close();
+      peerRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
