@@ -13,16 +13,30 @@ export function FileReceive() {
       `ws://localhost:8000?transferId=${transferId}`,
     );
 
+    let heartbeatInterval: NodeJS.Timeout | undefined;
+    socket.addEventListener("open", () => {
+      heartbeatInterval = setInterval(() => {
+        socket.send(
+          JSON.stringify({
+            type: "heartbeat",
+          }),
+        );
+      }, 10000);
+    });
+
     socket.addEventListener("message", (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "metadata") {
         setFilename(msg.filename);
         setFilesize(msg.filesize);
         setConnected(true);
-      }
+      } else if (msg.type === "heartbeat") console.log(msg);
     });
 
-    return () => socket.close();
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      socket.close();
+    };
   }, []);
 
   return (

@@ -20,13 +20,27 @@ export function FileUpload() {
     wsUrl.searchParams.set("filesize", selectedFile.size.toString());
     const socket = new WebSocket(wsUrl);
 
+    let heartbeatInterval: NodeJS.Timeout | undefined;
+    socket.addEventListener("open", () => {
+      heartbeatInterval = setInterval(() => {
+        socket.send(
+          JSON.stringify({
+            type: "heartbeat",
+          }),
+        );
+      }, 10000);
+    });
+
     socket.addEventListener("message", (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "offer") {
       }
     });
 
-    return () => socket.close();
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      socket.close();
+    };
   }, [selectedFile, transferId]);
 
   const handleDragOver = (e: TargetedDragEvent<HTMLDivElement>) => {

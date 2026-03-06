@@ -75,6 +75,14 @@ const server = Bun.serve({
 
     message(ws, raw) {
       const msg = JSON.parse(raw as string);
+      if (msg.type === "heartbeat") {
+        ws.send(
+          JSON.stringify({
+            type: "heartbeat",
+            timestamp: Date.now(),
+          }),
+        );
+      }
     },
 
     close(ws) {
