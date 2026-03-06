@@ -20,15 +20,11 @@ export function FileUpload() {
     wsUrl.searchParams.set("filesize", selectedFile.size.toString());
     const socket = new WebSocket(wsUrl);
 
-    socket.onopen = () => {
-      socket.send(
-        JSON.stringify({
-          type: "metadata",
-          filename: selectedFile.name,
-          filesize: selectedFile.size,
-        }),
-      );
-    };
+    socket.addEventListener("message", (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "offer") {
+      }
+    });
 
     return () => socket.close();
   }, [selectedFile, transferId]);
