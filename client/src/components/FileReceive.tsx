@@ -6,13 +6,19 @@ export function FileReceive() {
   const [filename, setFilename] = useState("");
   const [filesize, setFilesize] = useState(0);
   const [wsocket, setWsocket] = useState<WebSocket | null>(null);
+  const [leech, setLeech] = useState<RTCPeerConnection | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const transferId = searchParams.get("transferId");
+    const leech = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
     const socket = new WebSocket(
       `ws://localhost:8000?transferId=${transferId}`,
     );
+
+    setLeech(leech);
 
     let heartbeatInterval: NodeJS.Timeout | undefined;
     socket.addEventListener("open", () => {
@@ -26,29 +32,53 @@ export function FileReceive() {
       }, 10000);
     });
 
-    socket.addEventListener("message", (event) => {
+    socket.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "metadata") {
         setFilename(msg.filename);
         setFilesize(msg.filesize);
         setConnected(true);
-      } else if (msg.type === "event:heartbeat") console.log(msg);
+      } else if (msg.type === "incoming:answer") {
+        await leech.setRemoteDescription(new RTCSessionDescription(msg.answer));
+      } else if (msg.type === "transfer:candidate") {
+        await leech.addIceCandidate(msg.candidate);
+      }
     });
+
+    leech.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.send(
+          JSON.stringify({
+            type: "transfer:candidate",
+            candidate: event.candidate,
+          }),
+        );
+      }
+    };
+
+    leech.onconnectionstatechange = () => {
+      if (leech.connectionState === "connected") {
+        console.log("Peers connected");
+      }
+    };
 
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       socket.close();
+      leech.close();
     };
   }, []);
 
-  const handleDownload = () => {
-    if (wsocket) {
-      const offer = "Asd";
+  const handleDownload = async () => {
+    if (wsocket && leech) {
+      const channel = leech.createDataChannel("file-transfer");
+      const offer = await leech.createOffer();
+      await leech.setLocalDescription(offer);
 
       wsocket.send(
         JSON.stringify({
-          type: "offer",
-          sdp: "sdp",
+          type: "make:offer",
+          offer: leech.localDescription,
         }),
       );
     }
@@ -66,7 +96,10 @@ export function FileReceive() {
             <h3 className="text-xl truncate">{filename}</h3>
             <p>{(filesize / 1024 / 1024).toFixed(2)} MB</p>
           </div>
-          <button className="px-4 py-2 cursor-pointer font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-colors bg-foreground text-background hover:opacity-90">
+          <button
+            onClick={handleDownload}
+            className="px-4 py-2 cursor-pointer font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-colors bg-foreground text-background hover:opacity-90"
+          >
             Download
           </button>
         </div>

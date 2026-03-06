@@ -9,10 +9,19 @@ export function FileUpload() {
   const [shareLink, setShareLink] = useState("");
   const [transferId, setTransferId] = useState("");
   const [copied, setCopied] = useState(false);
+  const [peer, setPeer] = useState<RTCPeerConnection | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!selectedFile || !transferId) return;
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+    setPeer(peer);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedFile || !transferId || !peer) return;
     const wsUrl = new URL("ws://localhost:8000");
     wsUrl.searchParams.set("role", "host");
     wsUrl.searchParams.set("transferId", transferId);
@@ -31,17 +40,56 @@ export function FileUpload() {
       }, 10000);
     });
 
-    socket.addEventListener("message", (event) => {
+    socket.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === "offer") {
+      if (msg.type === "incoming:offer") {
+        peer.setRemoteDescription(new RTCSessionDescription(msg.offer));
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        socket.send(
+          JSON.stringify({
+            type: "make:answer",
+            answer: peer.localDescription,
+          }),
+        );
+      } else if (msg.type === "transfer:candidate") {
+        await peer.addIceCandidate(msg.candidate);
       }
     });
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.send(
+          JSON.stringify({
+            type: "transfer:candidate",
+            candidate: event.candidate,
+          }),
+        );
+      }
+    };
+
+    peer.ondatachannel = (event) => {
+      const channel = event.channel;
+      channel.onopen = () => {
+        console.log("data channel open");
+      };
+      channel.onmessage = (msg) => {
+        console.log(msg.data);
+      };
+    };
+
+    peer.onconnectionstatechange = () => {
+      if (peer.connectionState === "connected") {
+        console.log("Peers connected");
+      }
+    };
 
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       socket.close();
+      peer.close();
     };
-  }, [selectedFile, transferId]);
+  }, [selectedFile, transferId, peer]);
 
   const handleDragOver = (e: TargetedDragEvent<HTMLDivElement>) => {
     e.preventDefault();

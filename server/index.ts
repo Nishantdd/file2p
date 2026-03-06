@@ -99,6 +99,15 @@ const server = Bun.serve({
             answer: msg.answer,
           }),
         );
+      } else if (msg.type === "transfer:candidate") {
+        const isHost = ws.data.role === "host";
+        if (isHost) {
+          const leecherSocket = leecherSocketMap.get(transferId);
+          leecherSocket?.send(raw);
+        } else {
+          const hostSocket = hostSocketMap.get(transferId);
+          hostSocket?.send(raw);
+        }
       }
     },
 
