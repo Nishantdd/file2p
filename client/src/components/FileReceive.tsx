@@ -14,11 +14,12 @@ export function FileReceive() {
     );
 
     socket.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data);
-      console.log(data);
-      setFilename(data.filename);
-      setFilesize(data.filesize);
-      setConnected(true);
+      const msg = JSON.parse(event.data);
+      if (msg.type === "metadata") {
+        setFilename(msg.filename);
+        setFilesize(msg.filesize);
+        setConnected(true);
+      }
     });
 
     return () => socket.close();

@@ -13,9 +13,12 @@ export function FileUpload() {
 
   useEffect(() => {
     if (!selectedFile || !transferId) return;
-    const socket = new WebSocket(
-      `ws://localhost:8000?role=host&transferId=${transferId}`,
-    );
+    const wsUrl = new URL("ws://localhost:8000");
+    wsUrl.searchParams.set("role", "host");
+    wsUrl.searchParams.set("transferId", transferId);
+    wsUrl.searchParams.set("filename", selectedFile.name);
+    wsUrl.searchParams.set("filesize", selectedFile.size.toString());
+    const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
       socket.send(
@@ -50,11 +53,14 @@ export function FileUpload() {
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
     const transferId = Math.random().toString(36).substring(2, 10);
-    const mockLink = `http://localhost:4321/receive?transferId=${transferId}`;
-    const qrSvg = await generateQR(mockLink);
+    const link = new URL(
+      `/receive?transferId=${encodeURIComponent(transferId)}`,
+      "http://localhost:4321",
+    ).toString();
+    const qrSvg = await generateQR(link);
     setTransferId(transferId);
     setShareQR(qrSvg);
-    setShareLink(mockLink);
+    setShareLink(link);
   };
 
   const handleFileInputChange = (e: TargetedEvent<HTMLInputElement, Event>) => {
