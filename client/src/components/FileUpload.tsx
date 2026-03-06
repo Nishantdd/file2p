@@ -25,7 +25,7 @@ export function FileUpload() {
       heartbeatInterval = setInterval(() => {
         socket.send(
           JSON.stringify({
-            type: "heartbeat",
+            type: "event:heartbeat",
           }),
         );
       }, 10000);

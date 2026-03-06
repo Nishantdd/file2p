@@ -5,6 +5,7 @@ export function FileReceive() {
   const [connected, setConnected] = useState(false);
   const [filename, setFilename] = useState("");
   const [filesize, setFilesize] = useState(0);
+  const [wsocket, setWsocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -15,10 +16,11 @@ export function FileReceive() {
 
     let heartbeatInterval: NodeJS.Timeout | undefined;
     socket.addEventListener("open", () => {
+      setWsocket(socket);
       heartbeatInterval = setInterval(() => {
         socket.send(
           JSON.stringify({
-            type: "heartbeat",
+            type: "event:heartbeat",
           }),
         );
       }, 10000);
@@ -30,7 +32,7 @@ export function FileReceive() {
         setFilename(msg.filename);
         setFilesize(msg.filesize);
         setConnected(true);
-      } else if (msg.type === "heartbeat") console.log(msg);
+      } else if (msg.type === "event:heartbeat") console.log(msg);
     });
 
     return () => {
@@ -38,6 +40,19 @@ export function FileReceive() {
       socket.close();
     };
   }, []);
+
+  const handleDownload = () => {
+    if (wsocket) {
+      const offer = "Asd";
+
+      wsocket.send(
+        JSON.stringify({
+          type: "offer",
+          sdp: "sdp",
+        }),
+      );
+    }
+  };
 
   return (
     <div class="flex mx-16 items-center justify-center w-full gap-2">

@@ -74,12 +74,29 @@ const server = Bun.serve({
     },
 
     message(ws, raw) {
+      const transferId = ws.data.transferId;
       const msg = JSON.parse(raw as string);
-      if (msg.type === "heartbeat") {
+      if (msg.type === "event:heartbeat") {
         ws.send(
           JSON.stringify({
-            type: "heartbeat",
+            type: "event:heartbeat",
             timestamp: Date.now(),
+          }),
+        );
+      } else if (msg.type === "make:offer") {
+        const hostSocket = hostSocketMap.get(transferId);
+        hostSocket?.send(
+          JSON.stringify({
+            type: "incoming:offer",
+            offer: msg.offer,
+          }),
+        );
+      } else if (msg.type === "make:answer") {
+        const leecherSocket = leecherSocketMap.get(transferId);
+        leecherSocket?.send(
+          JSON.stringify({
+            type: "incoming:answer",
+            answer: msg.answer,
           }),
         );
       }
