@@ -33,12 +33,13 @@ export function FileReceive() {
       }, 10000);
     });
 
+    let connectionStateTimeout: NodeJS.Timeout | undefined;
     socket.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "metadata") {
         setFilename(msg.filename);
         setFilesize(msg.filesize);
-        setConnected(true);
+        connectionStateTimeout = setTimeout(() => setConnected(true), 1500);
       } else if (msg.type === "incoming:answer") {
         await leech.setRemoteDescription(new RTCSessionDescription(msg.answer));
       } else if (msg.type === "transfer:candidate") {
@@ -63,6 +64,7 @@ export function FileReceive() {
 
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (connectionStateTimeout) clearTimeout(connectionStateTimeout);
       socket.close();
       leech.close();
     };
