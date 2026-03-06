@@ -10,12 +10,23 @@ export function FileUpload() {
   const [transferId, setTransferId] = useState("");
   const [copied, setCopied] = useState(false);
   const peerRef = useRef<RTCPeerConnection | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     peerRef.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
+
+    peerRef.current.ondatachannel = (event) => {
+      const channel = event.channel;
+      channel.onopen = () => console.log("data channel open");
+      channel.onmessage = (msg) => console.log(msg.data);
+    };
+
+    peerRef.current.onconnectionstatechange = () => {
+      if (peerRef.current?.connectionState === "connected")
+        console.log("Peers connected");
+    };
 
     return () => {
       peerRef.current?.close();
@@ -24,7 +35,10 @@ export function FileUpload() {
   }, []);
 
   useEffect(() => {
-    if (!selectedFile || !transferId || !peer) return;
+    if (!selectedFile || !transferId) return;
+    const peer = peerRef.current;
+    if (!peer) return;
+
     const wsUrl = new URL("ws://localhost:8000");
     wsUrl.searchParams.set("role", "host");
     wsUrl.searchParams.set("transferId", transferId);
@@ -71,28 +85,12 @@ export function FileUpload() {
       }
     };
 
-    peer.ondatachannel = (event) => {
-      const channel = event.channel;
-      channel.onopen = () => {
-        console.log("data channel open");
-      };
-      channel.onmessage = (msg) => {
-        console.log(msg.data);
-      };
-    };
-
-    peer.onconnectionstatechange = () => {
-      if (peer.connectionState === "connected") {
-        console.log("Peers connected");
-      }
-    };
-
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
+      peer.onicecandidate = null;
       socket.close();
-      peer.close();
     };
-  }, [selectedFile, transferId, peer]);
+  }, [selectedFile, transferId]);
 
   const handleDragOver = (e: TargetedDragEvent<HTMLDivElement>) => {
     e.preventDefault();
