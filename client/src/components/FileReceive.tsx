@@ -1,16 +1,17 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Spinner } from "./Spinner";
 
 export function FileReceive() {
   const [connected, setConnected] = useState(false);
   const [filename, setFilename] = useState("");
   const [filesize, setFilesize] = useState(0);
-  const [wsocket, setWsocket] = useState<WebSocket | null>(null);
-  const [leech, setLeech] = useState<RTCPeerConnection | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const leechRef = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const transferId = searchParams.get("transferId");
+
     const leech = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -18,11 +19,11 @@ export function FileReceive() {
       `ws://localhost:8000?transferId=${transferId}`,
     );
 
-    setLeech(leech);
+    leechRef.current = leech;
+    socketRef.current = socket;
 
     let heartbeatInterval: NodeJS.Timeout | undefined;
     socket.addEventListener("open", () => {
-      setWsocket(socket);
       heartbeatInterval = setInterval(() => {
         socket.send(
           JSON.stringify({
@@ -57,9 +58,7 @@ export function FileReceive() {
     };
 
     leech.onconnectionstatechange = () => {
-      if (leech.connectionState === "connected") {
-        console.log("Peers connected");
-      }
+      if (leech.connectionState === "connected") console.log("Peers connected");
     };
 
     return () => {
@@ -70,18 +69,16 @@ export function FileReceive() {
   }, []);
 
   const handleDownload = async () => {
-    if (wsocket && leech) {
-      const channel = leech.createDataChannel("file-transfer");
-      const offer = await leech.createOffer();
-      await leech.setLocalDescription(offer);
+    const socket = socketRef.current;
+    const leech = leechRef.current;
+    if (!socket || !leech) return;
 
-      wsocket.send(
-        JSON.stringify({
-          type: "make:offer",
-          offer: leech.localDescription,
-        }),
-      );
-    }
+    const channel = leech.createDataChannel("file-transfer");
+    const offer = await leech.createOffer();
+    await leech.setLocalDescription(offer);
+    socket.send(
+      JSON.stringify({ type: "make:offer", offer: leech.localDescription }),
+    );
   };
 
   return (
