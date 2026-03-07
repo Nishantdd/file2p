@@ -1,10 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from "preact/hooks";
-import { Spinner } from "../Spinner";
-import { SpinnerAlternative } from "../SpinnerAlternative";
+import { Spinner } from "../ui/Spinner";
 import {
   initialSocketState,
   socketStateReducer,
 } from "./reducers/socketStateReducer";
+import { Button } from "../ui/Button";
 
 export function FileReceive() {
   const [filename, setFilename] = useState("");
@@ -142,12 +142,7 @@ export function FileReceive() {
             check if the sender has an active internet connection or ask for a
             new link.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 cursor-pointer font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-foreground text-background"
-          >
-            Reload
-          </button>
+          <Button onClick={() => window.location.reload()}>Reload</Button>
         </div>
       </div>
     );
@@ -159,19 +154,13 @@ export function FileReceive() {
           <h3 className="text-xl truncate">{filename}</h3>
           <p>{(filesize / 1024 / 1024).toFixed(2)} MB</p>
         </div>
-        <button
+        <Button
           onClick={handleDownload}
           disabled={downloading}
-          className={`px-4 py-2 ${downloading ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:opacity-90"} font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-foreground text-background`}
+          loading={downloading}
         >
-          {downloading ? (
-            <>
-              <SpinnerAlternative /> Downloading
-            </>
-          ) : (
-            "Download"
-          )}
-        </button>
+          {downloading ? "Downloading" : "Download"}
+        </Button>
       </div>
     </div>
   );
