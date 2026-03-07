@@ -1,10 +1,20 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { Spinner } from "./Spinner";
+import { useEffect, useReducer, useRef, useState } from "preact/hooks";
+import { Spinner } from "../Spinner";
+import { SpinnerAlternative } from "../SpinnerAlternative";
+import {
+  initialSocketState,
+  socketStateReducer,
+} from "./reducers/socketStateReducer";
 
 export function FileReceive() {
-  const [connected, setConnected] = useState(false);
   const [filename, setFilename] = useState("");
   const [filesize, setFilesize] = useState(0);
+  const [downloading, setDownloading] = useState(false);
+  const [socketState, socketStateDispatch] = useReducer(
+    socketStateReducer,
+    initialSocketState,
+  );
+
   const socketRef = useRef<WebSocket | null>(null);
   const leechRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
@@ -34,13 +44,16 @@ export function FileReceive() {
       }, 10000);
     });
 
-    let connectionStateTimeout: NodeJS.Timeout | undefined;
+    socket.addEventListener("error", () => {
+      socketStateDispatch({ type: "ERROR" });
+    });
+
     socket.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "metadata") {
         setFilename(msg.filename);
         setFilesize(msg.filesize);
-        connectionStateTimeout = setTimeout(() => setConnected(true), 1500);
+        socketStateDispatch({ type: "CONNECTED" });
       } else if (msg.type === "incoming:answer") {
         await leech.setRemoteDescription(new RTCSessionDescription(msg.answer));
       } else if (msg.type === "transfer:candidate") {
@@ -65,7 +78,6 @@ export function FileReceive() {
 
     return () => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
-      if (connectionStateTimeout) clearTimeout(connectionStateTimeout);
       socket.close();
       leech.close();
     };
@@ -77,6 +89,7 @@ export function FileReceive() {
     const leech = leechRef.current;
     if (!socket || !leech) return;
 
+    setDownloading(true);
     const channel = leech.createDataChannel("file-transfer");
     channel.binaryType = "arraybuffer";
     channelRef.current = channel;
@@ -96,6 +109,7 @@ export function FileReceive() {
         window.URL.revokeObjectURL(url);
         a.remove();
         dataArray = [];
+        setDownloading(false);
       } else {
         dataArray.push(data);
         const chunkSize = data.byteLength || data.size;
@@ -111,26 +125,54 @@ export function FileReceive() {
     );
   };
 
-  return (
-    <div class="flex mx-16 items-center justify-center w-full gap-2">
-      {!connected ? (
-        <>
-          <Spinner /> <p class="text-xl">Connecting to sender</p>
-        </>
-      ) : (
+  if (socketState.status === "connecting")
+    return (
+      <div class="flex mx-16 items-center justify-center w-full gap-2">
+        <Spinner />
+        <p className="text-xl">Connecting to sender</p>
+      </div>
+    );
+
+  if (socketState.status === "error")
+    return (
+      <div class="flex mx-16 items-center justify-center w-full gap-2">
         <div className="border rounded-lg p-4 flex flex-col gap-4">
-          <div className="flex flex-col w-3xs">
-            <h3 className="text-xl truncate">{filename}</h3>
-            <p>{(filesize / 1024 / 1024).toFixed(2)} MB</p>
-          </div>
+          <p className="text-xl w-3xs flex-wrap">
+            The sender has either closed this transfer or is now offline. Please
+            check if the sender has an active internet connection or ask for a
+            new link.
+          </p>
           <button
-            onClick={handleDownload}
-            className="px-4 py-2 cursor-pointer font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-colors bg-foreground text-background hover:opacity-90"
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 cursor-pointer font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-foreground text-background"
           >
-            Download
+            Reload
           </button>
         </div>
-      )}
+      </div>
+    );
+
+  return (
+    <div class="flex mx-16 items-center justify-center w-full gap-2">
+      <div className="border rounded-lg p-4 flex flex-col gap-4">
+        <div className="flex flex-col w-3xs">
+          <h3 className="text-xl truncate">{filename}</h3>
+          <p>{(filesize / 1024 / 1024).toFixed(2)} MB</p>
+        </div>
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className={`px-4 py-2 ${downloading ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:opacity-90"} font-sans font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-foreground text-background`}
+        >
+          {downloading ? (
+            <>
+              <SpinnerAlternative /> Downloading
+            </>
+          ) : (
+            "Download"
+          )}
+        </button>
+      </div>
     </div>
   );
 }
