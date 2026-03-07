@@ -147,7 +147,7 @@ export function FileUpload() {
     const transferId = Math.random().toString(36).substring(2, 10);
     const link = new URL(
       `/receive?transferId=${encodeURIComponent(transferId)}`,
-      "http://localhost:4321",
+      "https://papershare-mu.vercel.app",
     ).toString();
     const qrSvg = await generateQR(link);
     setTransferId(transferId);
