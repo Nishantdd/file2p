@@ -27,7 +27,7 @@ export function FileReceive() {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
     const socket = new WebSocket(
-      `ws://localhost:8000?transferId=${transferId}`,
+      `wss://connect.caraxes.in?transferId=${transferId}`,
     );
 
     leechRef.current = leech;
