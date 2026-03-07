@@ -2,6 +2,8 @@ import type { TargetedDragEvent, TargetedEvent } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
 import { generateQR } from "../utils/qr";
 
+const CHUNK_SIZE = 16 * 1024;
+
 export function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -83,6 +85,37 @@ export function FileUpload() {
           }),
         );
       }
+    };
+
+    peer.ondatachannel = (event) => {
+      const channel = event.channel;
+      channel.onopen = () => {
+        selectedFile.arrayBuffer().then((buffer) => {
+          let sentSize = 0;
+          const send = () => {
+            if (!buffer.byteLength) {
+              channel.send("done");
+              return;
+            }
+
+            const chunk = buffer.slice(0, CHUNK_SIZE);
+            buffer = buffer.slice(CHUNK_SIZE, buffer.byteLength);
+            channel.send(chunk);
+            sentSize += chunk.byteLength;
+            console.log(
+              `File transferred: ${Math.ceil(sentSize / (selectedFile.size / 100))}`,
+            );
+
+            if (channel.bufferedAmount > channel.bufferedAmountLowThreshold) {
+              channel.onbufferedamountlow = () => {
+                channel.onbufferedamountlow = null;
+                send();
+              };
+            }
+          };
+          send();
+        });
+      };
     };
 
     return () => {

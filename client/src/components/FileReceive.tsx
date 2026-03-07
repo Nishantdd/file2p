@@ -7,6 +7,7 @@ export function FileReceive() {
   const [filesize, setFilesize] = useState(0);
   const socketRef = useRef<WebSocket | null>(null);
   const leechRef = useRef<RTCPeerConnection | null>(null);
+  const channelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -71,11 +72,38 @@ export function FileReceive() {
   }, []);
 
   const handleDownload = async () => {
+    if (channelRef.current) return;
     const socket = socketRef.current;
     const leech = leechRef.current;
     if (!socket || !leech) return;
 
     const channel = leech.createDataChannel("file-transfer");
+    channel.binaryType = "arraybuffer";
+    channelRef.current = channel;
+
+    let dataArray: BlobPart[] = [];
+    let receivedSize = 0;
+    channel.onmessage = (event) => {
+      const { data } = event;
+      if (data.toString() === "done") {
+        channel.close();
+        const blob = new Blob(dataArray);
+        const a = document.createElement("a");
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        dataArray = [];
+      } else {
+        dataArray.push(data);
+        const chunkSize = data.byteLength || data.size;
+        receivedSize += chunkSize;
+        console.log(Math.ceil(receivedSize / (filesize / 100)) + "%");
+      }
+    };
+
     const offer = await leech.createOffer();
     await leech.setLocalDescription(offer);
     socket.send(
