@@ -1,6 +1,7 @@
 import type { TargetedDragEvent, TargetedEvent } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
 import { generateQR } from "../utils/qr";
+import { config } from "../config";
 
 const CHUNK_SIZE = 16 * 1024;
 
@@ -147,7 +148,7 @@ export function FileUpload() {
     const transferId = Math.random().toString(36).substring(2, 10);
     const link = new URL(
       `/receive?transferId=${encodeURIComponent(transferId)}`,
-      "https://papershare-mu.vercel.app",
+      config.APP_ADDR,
     ).toString();
     const qrSvg = await generateQR(link);
     setTransferId(transferId);

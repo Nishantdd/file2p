@@ -5,6 +5,7 @@ import {
   socketStateReducer,
 } from "./reducers/socketStateReducer";
 import { Button } from "../ui/Button";
+import { config } from "../../config";
 
 export function FileReceive() {
   const [filename, setFilename] = useState("");
@@ -27,7 +28,7 @@ export function FileReceive() {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
     const socket = new WebSocket(
-      `wss://connect.caraxes.in?transferId=${transferId}`,
+      `${config.SERVER_ADDR}?transferId=${transferId}`,
     );
 
     leechRef.current = leech;
