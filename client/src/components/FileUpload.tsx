@@ -42,7 +42,7 @@ export function FileUpload() {
     const peer = peerRef.current;
     if (!peer) return;
 
-    const wsUrl = new URL("wss://connect.caraxes.in");
+    const wsUrl = new URL(config.SERVER_ADDR);
     wsUrl.searchParams.set("role", "host");
     wsUrl.searchParams.set("transferId", transferId);
     wsUrl.searchParams.set("filename", selectedFile.name);

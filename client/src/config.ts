@@ -4,8 +4,8 @@ type Config = {
 };
 
 const localConfig: Config = {
-  APP_ADDR: "http://localhost:8000",
-  SERVER_ADDR: "http://localhost:8000",
+  APP_ADDR: "http://localhost:4321",
+  SERVER_ADDR: "ws://localhost:8000",
 };
 
 const prodConfig: Config = {
