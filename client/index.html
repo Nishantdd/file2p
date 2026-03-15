@@ -14,7 +14,31 @@
     />
   </head>
   <body>
-    <div id="app">hi</div>
+    <div
+      class="bg-card border-4 shadow-brutal-xl w-full max-w-2xl overflow-hidden flex flex-col rounded-lg"
+    >
+      <header
+        class="bg-accent-1 border-b-4 p-1.5 min-h-28 flex items-center justify-center"
+      >
+        <h1 class="text-white text-6xl font-semibold text-shadow-brutal">
+          FILE2P
+        </h1>
+      </header>
+      <div id="tabs" class="flex-1 divide-x-4 grid grid-cols-2">
+        <button
+          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          data-active="true"
+        >
+          Send
+        </button>
+        <button
+          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          data-active="false"
+        >
+          Receive
+        </button>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
