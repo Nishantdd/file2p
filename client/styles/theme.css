@@ -1,16 +1,22 @@
 @theme inline {
   --font-sans: "Space Grotesk", system-ui, "Segoe UI", Roboto, sans-serif;
-  --color-text: #000000;
-  --color-bg-body: #a3e635;
-  --color-bg-card: #ffffff;
-  --color-border: #000000;
-  --color-accent-1: #f43f5e;
-  --color-accent-2: #3b82f6;
-  --color-accent-3: #fbbf24;
+  --color-background: var(--bg-body);
+  --color-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-accent-1: var(--accent-1);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+
+  /* Custom shadows */
+  --shadow-brutal-xs: 2px 2px 0 var(--border);
+  --shadow-brutal-sm: 4px 4px 0 var(--border);
+  --shadow-brutal-md: 6px 6px 0 var(--border);
+  --shadow-brutal-lg: 8px 8px 0 var(--border);
+  --shadow-brutal-xl: 12px 12px 0 var(--border);
+  --text-shadow-brutal: 4px 4px 0 var(--border);
 }
 
 :root {
-  --text: #000000;
   --bg-body: #a3e635;
   --bg-card: #ffffff;
   --border: #000000;
