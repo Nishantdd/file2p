@@ -20,24 +20,44 @@
       <header
         class="bg-accent-1 border-b-4 p-1.5 min-h-28 flex items-center justify-center"
       >
-        <h1 class="text-white text-6xl font-semibold text-shadow-brutal">
+        <h1 class="text-white text-6xl font-semibold text-shadow-brutal tracking-tight">
           FILE2P
         </h1>
       </header>
-      <div id="tabs" class="flex-1 divide-x-4 grid grid-cols-2">
+
+      <div id="tabs" class="flex-1 border-b-4 divide-x-4 grid grid-cols-2">
         <button
-          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white tab-btn"
+          data-tab="send"
           data-active="true"
         >
           Send
         </button>
         <button
-          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          class="bg-transparent p-5 text-xl font-bold cursor-pointer uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white tab-btn"
+          data-receive="receive"
           data-active="false"
         >
           Receive
         </button>
       </div>
+
+      <div
+        id="content"
+        class="p-12 border-b-4 min-h-96 flex flex-col justify-center"
+      >
+        <div id="content-send" class="data-[active=false]:hidden" data-active="true">
+          send
+        </div>
+
+        <div id="content-receive" class="data-[active=false]:hidden" data-active="false">
+          receive
+        </div>
+      </div>
+
+      <footer class="p-4">
+        <button class="hover:underline cursor-pointer">Help?<button/>
+      </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
