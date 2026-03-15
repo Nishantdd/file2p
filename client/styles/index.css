@@ -1,0 +1,20 @@
+@import "./theme.css";
+@import "tailwindcss";
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg-body);
+    background-image: radial-gradient(var(--border) 2px, transparent 2px);
+    background-size: 30px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-weight: 500;
+    font-family: var(--font-sans);
+  }
+}

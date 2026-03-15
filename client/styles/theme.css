@@ -1,0 +1,22 @@
+@theme inline {
+  --font-sans: "Space Grotesk", system-ui, "Segoe UI", Roboto, sans-serif;
+  --color-text: #000000;
+  --color-bg-body: #a3e635;
+  --color-bg-card: #ffffff;
+  --color-border: #000000;
+  --color-accent-1: #f43f5e;
+  --color-accent-2: #3b82f6;
+  --color-accent-3: #fbbf24;
+}
+
+:root {
+  --text: #000000;
+  --bg-body: #a3e635;
+  --bg-card: #ffffff;
+  --border: #000000;
+  --accent-1: #f43f5e;
+  --accent-2: #3b82f6;
+  --accent-3: #fbbf24;
+  /*--shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;*/
+}

@@ -1,1 +1,0 @@
-export { FileReceive } from "./FileReceive";
