@@ -1,5 +1,5 @@
 @utility btn {
-  @apply bg-card border-4 px-8 py-4 font-bold text-lg cursor-pointer uppercase shadow-brutal-md inline-block rounded-sm transition-all duration-100 hover:shadow-brutal-lg hover:-translate-0.5 active:translate-1 active:shadow-brutal-xs;
+  @apply inline-block cursor-pointer rounded-sm border-4 bg-card px-8 py-4 text-lg font-bold uppercase shadow-brutal-md transition-all duration-100 hover:-translate-0.5 hover:shadow-brutal-lg active:translate-1 active:shadow-brutal-xs;
 }
 
 @utility btn-primary {
@@ -11,13 +11,13 @@
 }
 
 @utility input-code {
-  @apply border-4 bg-card p-5 text-2xl font-bold w-full max-w-sm text-center shadow-brutal-md rounded-sm uppercase focus:outline-none focus:bg-accent-3;
+  @apply w-full max-w-sm rounded-sm border-4 bg-card p-5 text-center text-2xl font-bold uppercase shadow-brutal-md focus:bg-accent-3 focus:outline-none;
 }
 
 @utility icon {
-  @apply text-6xl block filter drop-shadow-[4px_4px_0_var(--border)];
+  @apply block text-6xl drop-shadow-[4px_4px_0_var(--border)] filter;
 }
 
 @utility badge {
-  @apply px-4 py-1.5 font-bold border-3 rounded-sm shadow-brutal-sm;
+  @apply rounded-sm border-3 px-4 py-1.5 font-bold shadow-brutal-sm;
 }
