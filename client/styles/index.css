@@ -1,4 +1,5 @@
 @import "./theme.css";
+@import "./utility.css";
 @import "tailwindcss";
 
 @layer base {

@@ -14,6 +14,20 @@
   --shadow-brutal-lg: 8px 8px 0 var(--border);
   --shadow-brutal-xl: 12px 12px 0 var(--border);
   --text-shadow-brutal: 4px 4px 0 var(--border);
+
+  /* Popin animation */
+  --animate-popin: popin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @keyframes popin {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
 :root {
@@ -23,6 +37,4 @@
   --accent-1: #f43f5e;
   --accent-2: #3b82f6;
   --accent-3: #fbbf24;
-  /*--shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;*/
 }

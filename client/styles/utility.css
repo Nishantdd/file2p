@@ -1,0 +1,19 @@
+@utility btn {
+  @apply bg-card border-4 px-8 py-4 font-bold text-lg cursor-pointer uppercase shadow-brutal-md inline-block rounded-sm transition-all duration-100 hover:shadow-brutal-lg hover:-translate-0.5 active:translate-1 active:shadow-brutal-xs;
+}
+
+@utility btn-primary {
+  @apply bg-accent-2 text-white;
+}
+
+@utility btn-danger {
+  @apply bg-accent-1 text-white;
+}
+
+@utility input-code {
+  @apply border-4 bg-card p-5 text-2xl font-bold w-full max-w-sm text-center shadow-brutal-md rounded-sm uppercase focus:outline-none focus:bg-accent-3;
+}
+
+@utility icon {
+  @apply text-6xl block filter drop-shadow-[4px_4px_0_var(--border)];
+}
