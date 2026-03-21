@@ -1,7 +1,7 @@
 {
-  "name": "file2p",
-  "scripts": {
-      "dev": "pnpm -r --parallel dev"
-  },
-  "packageManager": "pnpm@10.29.3"
+    "name": "file2p",
+    "scripts": {
+        "dev": "pnpm -r --parallel dev"
+    },
+    "packageManager": "pnpm@10.32.1"
 }
