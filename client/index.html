@@ -84,12 +84,18 @@
           </div>
 
           <!--Download state-->
-          <div class="flex flex-col data-[active=false]:hidden items-center justify-center" data-active="true">
+          <div class="flex flex-col data-[active=false]:hidden items-center justify-center" data-active="false">
             <h2 class="text-3xl font-bold uppercase">PULLING DATA</h2>
             <div class="w-full h-12 border-4 rounded-lg shadow-brutal-md overflow-hidden my-8">
               <div class="bg-accent-2 h-full w-72 border-r-4 bg-[linear-gradient(45deg,rgba(0,0,0,0.1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.1)_75%,transparent_75%,transparent)] bg-size-[20px_20px]"></div>
             </div>
             <h2 class="text-3xl font-bold uppercase">66% - 15 SECONDS LEFT</h2>
+          </div>
+
+          <!--Connection Error state-->
+          <div class="flex flex-col gap-6 data-[active=false]:hidden items-center justify-center" data-active="true">
+            <div class="w-full text-center bg-accent-1 border-4 p-6 font-bold text-xl shadow-brutal-md -rotate-2 text-white">CRITICAL: DOWNLOAD ABORTED</div>
+            <button class="btn btn-danger mt-6">RESUME</button>
           </div>
         </div>
       </div>
