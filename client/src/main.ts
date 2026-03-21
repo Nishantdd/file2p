@@ -1,10 +1,10 @@
-import { switchTabs } from "./switch-helpers";
+import { switchTabs } from "./helpers/switch-helpers";
 import type { TabStates } from "./types/states.types";
+import "./send";
+import "./receive";
 
-const tabs = document.querySelectorAll<HTMLButtonElement>("[data-tab]")!;
-const panels = document.querySelectorAll<HTMLDivElement>("[data-panel]")!;
-const sendStates = document.querySelectorAll<HTMLDivElement>("#send-panel > div[data-state]");
-const receiveStates = document.querySelectorAll<HTMLDivElement>("#receive-panel > div[data-state]");
+const tabs = document.querySelectorAll<HTMLButtonElement>("[data-tab]");
+const panels = document.querySelectorAll<HTMLDivElement>("[data-panel]");
 
 tabs.forEach(tab => {
   tab.addEventListener("click", () => {
