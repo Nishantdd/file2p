@@ -1,4 +1,4 @@
-import type { TabStates, ReceiveStates, SendStates } from "./types/states.types";
+import type { TabStates, ReceiveStates, SendStates } from "../types/states.types";
 
 export const switchTabs = (
   tabs: NodeListOf<HTMLButtonElement>,

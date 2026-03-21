@@ -1,5 +1,5 @@
 @theme inline {
-  --font-sans: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: "Space Grotesk", system-ui, "Segoe UI", Roboto, sans-serif;
   --color-background: var(--bg-body);
   --color-card: var(--bg-card);
   --color-upload: var(--bg-upload);
