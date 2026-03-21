@@ -6,6 +6,8 @@
   --color-accent-1: var(--accent-1);
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
+  --color-accent-4: var(--accent-4);
+  --color-accent-5: var(--accent-5);
 
   /* Custom shadows */
   --shadow-brutal-xs: 2px 2px 0 var(--border);
@@ -14,20 +16,6 @@
   --shadow-brutal-lg: 8px 8px 0 var(--border);
   --shadow-brutal-xl: 12px 12px 0 var(--border);
   --text-shadow-brutal: 4px 4px 0 var(--border);
-
-  /* Popin animation */
-  --animate-popin: popin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-  @keyframes popin {
-    from {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
 }
 
 :root {
@@ -37,4 +25,6 @@
   --accent-1: #f43f5e;
   --accent-2: #3b82f6;
   --accent-3: #fbbf24;
+  --accent-4: #7df99f;
+  --accent-5: #ff4911;
 }
