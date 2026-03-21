@@ -46,12 +46,25 @@
         id="content"
         class="p-12 border-b-4 min-h-96 flex flex-col justify-center"
       >
-        <div id="content-send" class="data-[active=false]:hidden" data-active="true">
+        <div id="content-send" class="data-[active=false]:hidden animate-popin" data-active="false">
           send
         </div>
 
-        <div id="content-receive" class="data-[active=false]:hidden" data-active="false">
-          receive
+        <div id="content-receive" class="data-[active=false]:hidden animate-popin" data-active="true">
+          <!--Input state-->
+          <div class="flex flex-col data-[active=false]:hidden items-center justify-center" data-active="false">
+            <span class="icon mb-5">🎯</span>
+            <h2 class="text-3xl font-bold uppercase">ENTER TARGET CODE</h2>
+            <div class="my-8"><input type="text" placeholder="ABC-123" class="input-code" /></div>
+            <button class="btn btn-primary mt-6">CONNECT</button>
+          </div>
+
+          <!--Connection state-->
+          <div class="flex flex-col data-[active=false]:hidden items-center justify-center" data-active="true">
+            <span class="icon mb-5">🎯</span>
+            <h2 class="text-3xl font-bold uppercase">JACKING IN...</h2>
+          </div>
+        </div>
         </div>
       </div>
 
