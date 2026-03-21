@@ -34,7 +34,9 @@
       <div id="content" class="flex min-h-96 flex-col justify-center border-b-4 p-12">
         <div id="content-send" class="animate-popin data-[active=false]:hidden" data-active="true">
           <!--Upload state-->
-          <div class="flex animate-popin flex-col items-center justify-center gap-8 data-[active=false]:hidden">
+          <div
+            class="flex animate-popin flex-col items-center justify-center gap-8 data-[active=false]:hidden"
+            data-active="false">
             <h2 class="text-3xl font-bold uppercase">CHOOSE YOUR FILES</h2>
             <div
               class="w-full cursor-pointer rounded-lg border-4 border-dashed bg-upload/50 px-8 py-16 text-center duration-200 hover:bg-upload">
@@ -44,7 +46,19 @@
           </div>
 
           <!--Ready state-->
-          <div class="flex animate-popin flex-col items-center justify-center gap-8 data-[active=false]:hidden"></div>
+          <div
+            class="flex animate-popin flex-col items-center justify-center gap-8 data-[active=false]:hidden"
+            data-active="true">
+            <h2 class="text-3xl font-bold uppercase">READY TO DEPLOY</h2>
+            <div class="flex gap-8">
+              <div class="aspect-square h-40 rounded-lg border-4 shadow-brutal-lg"></div>
+              <div class="max-w-content flex flex-col justify-around">
+                <div class="badge bg-accent-3 uppercase">ARCHIVE.zip</div>
+                <div class="w-fit badge bg-accent-2 text-white">4.2 GB</div>
+              </div>
+            </div>
+            <input type="text" value="X-99-YZ" readonly class="input-code" />
+          </div>
         </div>
 
         <div id="content-receive" class="animate-popin data-[active=false]:hidden" data-active="false">
