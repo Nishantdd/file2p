@@ -1,17 +1,14 @@
-const tabButtons = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
-const contentSend = document.getElementById("content-send")!;
-const contentReceive = document.getElementById("content-receive")!;
+import { switchTabs } from "./switch-helpers";
+import type { TabStates } from "./types/states.types";
 
-type TabStates = "send" | "receive";
-type SendStates = "upload" | "ready";
-type ReceiveStates = "input" | "conn" | "cerr" | "ready" | "dl" | "derr";
+const tabs = document.querySelectorAll<HTMLButtonElement>("[data-tab]")!;
+const panels = document.querySelectorAll<HTMLDivElement>("[data-panel]")!;
+const sendStates = document.querySelectorAll<HTMLDivElement>("#send-panel > div[data-state]");
+const receiveStates = document.querySelectorAll<HTMLDivElement>("#receive-panel > div[data-state]");
 
-tabButtons.forEach(btn =>
-  btn.addEventListener("click", () => {
-    tabButtons.forEach(b => (b.dataset.active = "false"));
-    btn.dataset.active = "true";
-    contentSend.dataset.active = "false";
-    contentReceive.dataset.active = "false";
-    btn.dataset.tab === "send" ? (contentSend.dataset.active = "true") : (contentReceive.dataset.active = "true");
-  })
-);
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.tab as TabStates;
+    switchTabs(tabs, panels, target);
+  });
+});
