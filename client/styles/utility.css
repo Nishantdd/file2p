@@ -17,3 +17,7 @@
 @utility icon {
   @apply text-6xl block filter drop-shadow-[4px_4px_0_var(--border)];
 }
+
+@utility badge {
+  @apply px-4 py-1.5 font-bold border-3 rounded-sm shadow-brutal-sm;
+}
