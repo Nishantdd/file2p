@@ -11,7 +11,7 @@
 }
 
 @utility input-code {
-  @apply w-full rounded-sm border-4 bg-card p-5 text-center text-2xl font-bold uppercase shadow-brutal-md focus:bg-accent-3 focus:outline-none;
+  @apply w-full rounded-sm border-4 bg-card p-5 text-center text-2xl font-bold uppercase shadow-brutal-md select-text focus:bg-accent-3 focus:outline-none;
 }
 
 @utility icon {

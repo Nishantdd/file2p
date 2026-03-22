@@ -6,6 +6,7 @@
 @layer base {
   * {
     border-color: var(--border);
+    user-select: none;
   }
 
   body {
@@ -19,5 +20,40 @@
     overflow: hidden;
     font-weight: 500;
     font-family: var(--font-sans);
+  }
+}
+
+@media (pointer: fine) {
+  * {
+    cursor:
+      url("/cursors/arrow.svg") 3 2,
+      default !important;
+  }
+
+  button,
+  a,
+  [role="button"],
+  select,
+  label,
+  summary,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  [class*="cursor-pointer"] {
+    cursor:
+      url("/cursors/pointer.svg") 4 0,
+      pointer !important;
+  }
+
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  [contenteditable="true"] {
+    cursor:
+      url("/cursors/text.svg") 7 11,
+      text !important;
   }
 }
