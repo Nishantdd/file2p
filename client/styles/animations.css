@@ -2,6 +2,7 @@
   --animate-popin: popin 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --animate-spin: spin 1s linear infinite;
   --animate-slide-left: slide-left 2s linear infinite;
+  --animate-stripe-march: stripe-march 2s linear infinite;
 }
 
 @keyframes popin {
@@ -9,6 +10,7 @@
     transform: scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -25,7 +27,18 @@
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-80px);
+  }
+}
+
+@keyframes stripe-march {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -40px 0;
   }
 }

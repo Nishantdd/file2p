@@ -39,6 +39,8 @@ export let transferSpeed = 0;
 let lastMeasureTime = 0;
 let lastMeasureSize = 0;
 
+const LABEL_THRESHOLD = 11;
+
 const cleanup = () => {
   clearInterval(heartbeatInterval);
   if (channel) {
@@ -129,6 +131,8 @@ const handleDownload = async () => {
 
   progressBar.style.width = "0%";
   progressPct.textContent = "0%";
+  progressPct.style.left = "0%";
+  progressPct.style.transform = "translate(8px, -50%)";
   progressTnf.textContent = "...";
 
   switchReceiveStates(receiveStates, "dl");
@@ -167,6 +171,9 @@ const handleDownload = async () => {
       const percentage = Math.min(100, Math.ceil((receivedSize / filesize) * 100));
       progressBar.style.width = `${percentage}%`;
       progressPct.textContent = `${percentage}%`;
+      progressPct.style.left = `${percentage}%`;
+      progressPct.style.transform =
+        percentage >= LABEL_THRESHOLD ? "translate(calc(-100% - 8px), -50%)" : "translate(8px, -50%)";
 
       if (transferSpeed > 0) {
         progressTnf.textContent = `${(transferSpeed / 1048576).toFixed(1)}MB/s - ${(receivedSize / 1048576).toFixed(1)}MB received`;
