@@ -13,7 +13,7 @@ const receiveFilesize = document.getElementById("receive-filesize") as HTMLEleme
 const downloadBtn = document.getElementById("receive-download-btn") as HTMLButtonElement;
 const progressBar = document.getElementById("receive-progress-bar") as HTMLDivElement;
 const progressPct = document.getElementById("receive-progress-pct") as HTMLElement;
-const progressEta = document.getElementById("receive-progress-eta") as HTMLElement;
+const progressTnf = document.getElementById("receive-progress-tnf") as HTMLElement;
 const retryDerrBtn = document.getElementById("receive-retry-derr") as HTMLButtonElement;
 
 let socket: WebSocket | null = null;
@@ -121,7 +121,7 @@ const handleDownload = async () => {
 
   progressBar.style.width = "0%";
   progressPct.textContent = "0%";
-  progressEta.textContent = "...";
+  progressTnf.textContent = "...";
 
   switchReceiveStates(receiveStates, "dl");
 
@@ -152,7 +152,6 @@ const handleDownload = async () => {
       const elapsed = (now - lastMeasureTime) / 1000;
       if (elapsed >= 0.5) {
         transferSpeed = (receivedSize - lastMeasureSize) / elapsed;
-        console.log(transferSpeed / 1048576, "MB/s");
         lastMeasureTime = now;
         lastMeasureSize = receivedSize;
       }
@@ -162,8 +161,7 @@ const handleDownload = async () => {
       progressPct.textContent = `${percentage}%`;
 
       if (transferSpeed > 0) {
-        const eta = Math.ceil((filesize - receivedSize) / transferSpeed);
-        progressEta.textContent = `${eta}S LEFT`;
+        progressTnf.textContent = `${(transferSpeed / 1048576).toFixed(1)}MB/s - ${(receivedSize / 1048576).toFixed(1)}MB received`;
       }
     }
   };
