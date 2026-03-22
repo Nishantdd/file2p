@@ -140,10 +140,14 @@ fileInput.addEventListener("change", e => {
 });
 
 sendCopyBtn.addEventListener("click", async () => {
+  sendCopyBtn.disabled = true;
   await navigator.clipboard.writeText(sendCode.value);
   const prev = sendCopyBtn.textContent;
   sendCopyBtn.textContent = "COPIED!";
-  setTimeout(() => (sendCopyBtn.textContent = prev), 500);
+  setTimeout(() => {
+    sendCopyBtn.textContent = prev;
+    sendCopyBtn.disabled = false;
+  }, 1000);
 });
 
 sendResetBtn.addEventListener("click", () => {

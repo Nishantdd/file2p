@@ -14,7 +14,15 @@ const downloadBtn = document.getElementById("receive-download-btn") as HTMLButto
 const progressBar = document.getElementById("receive-progress-bar") as HTMLDivElement;
 const progressPct = document.getElementById("receive-progress-pct") as HTMLElement;
 const progressTnf = document.getElementById("receive-progress-tnf") as HTMLElement;
+const cancelDlBtn = document.getElementById("receive-cancel-dl") as HTMLButtonElement;
 const retryDerrBtn = document.getElementById("receive-retry-derr") as HTMLButtonElement;
+
+const syncUrl = (transferId: string | null) => {
+  const url = transferId
+    ? `${window.location.pathname}?transferId=${encodeURIComponent(transferId)}`
+    : window.location.pathname;
+  history.replaceState(null, "", url);
+};
 
 let socket: WebSocket | null = null;
 let peer: RTCPeerConnection | null = null;
@@ -179,6 +187,7 @@ const handleDownload = async () => {
 connectBtn.addEventListener("click", () => {
   const code = codeInput.value.trim().toUpperCase();
   if (!code) return;
+  syncUrl(code);
   switchReceiveStates(receiveStates, "conn");
   startConnection(code);
 });
@@ -189,6 +198,14 @@ codeInput.addEventListener("keydown", e => {
 
 retryCerrBtn.addEventListener("click", () => {
   cleanup();
+  syncUrl(null);
+  codeInput.value = "";
+  switchReceiveStates(receiveStates, "input");
+});
+
+cancelDlBtn.addEventListener("click", () => {
+  cleanup();
+  syncUrl(null);
   codeInput.value = "";
   switchReceiveStates(receiveStates, "input");
 });
