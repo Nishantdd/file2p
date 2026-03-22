@@ -82,7 +82,7 @@ const startConnection = (transferId: string) => {
       filename = msg.filename;
       filesize = msg.filesize;
       receiveFilename.textContent = filename;
-      receiveFilesize.textContent = `${(filesize / 1024 / 1024).toFixed(2)} MB`;
+      receiveFilesize.textContent = `${(filesize / 1048576).toFixed(2)} MB`;
       switchReceiveStates(receiveStates, "ready");
     } else if (msg.type === "incoming:answer") {
       await p.setRemoteDescription(new RTCSessionDescription(msg.answer));
@@ -152,7 +152,7 @@ const handleDownload = async () => {
       const elapsed = (now - lastMeasureTime) / 1000;
       if (elapsed >= 0.5) {
         transferSpeed = (receivedSize - lastMeasureSize) / elapsed;
-        console.log(transferSpeed / (1024 * 1024), "MB/s");
+        console.log(transferSpeed / 1048576, "MB/s");
         lastMeasureTime = now;
         lastMeasureSize = receivedSize;
       }
