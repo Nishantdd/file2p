@@ -15,7 +15,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     font-weight: 500;
     font-family: var(--font-sans);
   }

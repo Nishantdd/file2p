@@ -12,59 +12,69 @@
   </head>
 
   <body>
-    <div class="flex w-full max-w-2xl flex-col overflow-hidden rounded-lg border-4 bg-card shadow-brutal-xl">
-      <header class="flex min-h-28 items-center justify-center border-b-4 bg-accent-1 p-1.5">
-        <h1 class="text-6xl font-semibold tracking-tight text-white text-shadow-brutal">FILE2P</h1>
+    <div
+      class="flex h-dvh w-full flex-col bg-card sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-xl sm:overflow-hidden sm:rounded-lg sm:border-4 sm:shadow-brutal-xl">
+      <header class="flex min-h-18 shrink-0 items-center justify-center border-b-4 bg-accent-1 p-1.5 sm:min-h-22">
+        <h1 class="text-4xl font-semibold tracking-tight text-white text-shadow-brutal sm:text-5xl">FILE2P</h1>
       </header>
 
-      <div id="tabs" class="grid flex-1 grid-cols-2 divide-x-4 border-b-4">
+      <div id="tabs" class="grid shrink-0 grid-cols-2 divide-x-4 border-b-4">
         <button
-          class="cursor-pointer bg-transparent p-5 text-xl font-bold uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          class="cursor-pointer bg-transparent p-3.5 text-base font-bold uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white sm:p-4 sm:text-lg"
           data-tab="send"
           data-active="true">
           Send
         </button>
         <button
-          class="cursor-pointer bg-transparent p-5 text-xl font-bold uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white"
+          class="cursor-pointer bg-transparent p-3.5 text-base font-bold uppercase duration-100 hover:bg-accent-3 data-[active=true]:bg-border data-[active=true]:text-white sm:p-4 sm:text-lg"
           data-tab="receive"
           data-active="false">
           Receive
         </button>
       </div>
 
-      <div id="content" class="flex min-h-96 flex-col justify-center border-b-4 p-12">
+      <div id="content" class="min-h-0 flex-1 overflow-y-auto border-b-4">
         <!--SEND PANEL-->
-        <div id="send-panel" class="animate-popin data-[active=false]:hidden" data-panel="send" data-active="true">
+        <div
+          id="send-panel"
+          class="flex min-h-full animate-popin flex-col p-6 data-[active=false]:hidden sm:p-8"
+          data-panel="send"
+          data-active="true">
           <!--Upload state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center gap-8 data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
             data-state="upload"
             data-active="true">
-            <h2 class="text-3xl font-bold uppercase">CHOOSE YOUR FILE</h2>
+            <h2 class="text-2xl font-bold uppercase sm:text-3xl">CHOOSE YOUR FILE</h2>
             <div
               id="send-dropzone"
-              class="w-full cursor-pointer rounded-lg border-4 border-dashed bg-upload/50 px-8 py-16 text-center duration-200 hover:bg-upload data-[dragging=true]:border-solid data-[dragging=true]:bg-upload">
+              class="w-full cursor-pointer rounded-lg border-4 border-dashed bg-upload/50 px-8 py-12 text-center duration-200 hover:bg-upload data-[dragging=true]:border-solid data-[dragging=true]:bg-upload sm:py-16">
               <input id="send-file-input" type="file" class="hidden" />
               <span class="mb-6 icon">📁</span>
-              <h2 class="text-3xl font-bold uppercase">DUMP IT HERE</h2>
+              <h2 class="text-2xl font-bold uppercase sm:text-3xl">DUMP IT HERE</h2>
             </div>
           </div>
 
           <!--Ready state-->
-          <div class="animate-popin data-[active=false]:hidden" data-state="ready" data-active="false">
-            <div class="mx-auto flex w-full max-w-lg flex-col items-center gap-8">
-              <h2 class="text-center text-3xl font-bold uppercase">READY TO SHARE</h2>
-              <div class="flex w-full items-center gap-6">
+          <div
+            class="flex flex-1 animate-popin flex-col items-center justify-center data-[active=false]:hidden"
+            data-state="ready"
+            data-active="false">
+            <div class="flex w-full flex-col items-center gap-6">
+              <h2 class="text-2xl font-bold uppercase sm:text-3xl">READY TO SHARE</h2>
+              <div class="flex w-full items-center gap-5">
                 <div
                   id="send-qr"
-                  class="h-40 w-40 shrink-0 overflow-hidden rounded-lg border-4 shadow-brutal-lg [&>svg]:h-full [&>svg]:w-full"></div>
+                  class="h-32 w-32 shrink-0 overflow-hidden rounded-lg border-4 shadow-brutal-lg sm:h-36 sm:w-36 [&>svg]:h-full [&>svg]:w-full"></div>
                 <div class="flex min-w-0 flex-1 flex-col justify-center gap-2">
-                  <div id="send-filename" class="w-full truncate badge bg-accent-3 uppercase"></div>
-                  <div id="send-filesize" class="mt-2 w-fit badge bg-accent-2 text-white"></div>
+                  <div id="send-filename" class="max-w-full self-start truncate badge bg-accent-3 uppercase"></div>
+                  <div
+                    id="send-filesize"
+                    class="mt-2 max-w-full self-start truncate badge bg-accent-2 text-white"></div>
                 </div>
               </div>
-              <input id="send-code" type="text" readonly class="mx-auto input-code w-full max-w-130" />
-              <div class="mx-auto flex w-full max-w-130 gap-4">
+              <input id="send-code" type="text" readonly class="input-code" />
+              <div class="flex w-full gap-4">
                 <button id="send-copy-btn" class="btn flex-1 btn-primary">COPY CODE</button>
                 <button id="send-reset-btn" class="btn flex-1">CHANGE FILE</button>
               </div>
@@ -75,95 +85,95 @@
         <!--RECEIVE PANEL-->
         <div
           id="receive-panel"
-          class="animate-popin data-[active=false]:hidden"
+          class="flex min-h-full animate-popin flex-col p-6 data-[active=false]:hidden sm:p-8"
           data-panel="receive"
           data-active="false">
           <!--Input state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center data-[active=false]:hidden"
             data-state="input"
             data-active="true">
             <span class="mb-5 icon">🎯</span>
-            <h2 class="text-3xl font-bold uppercase">ENTER TARGET CODE</h2>
-            <div class="my-8">
+            <h2 class="text-2xl font-bold uppercase sm:text-3xl">ENTER TARGET CODE</h2>
+            <div class="my-6">
               <input id="receive-code-input" autofocus type="text" placeholder="ABC123" class="input-code" />
             </div>
-            <button id="receive-connect-btn" class="mt-6 btn btn-primary">CONNECT</button>
+            <button id="receive-connect-btn" class="mt-4 btn btn-primary">CONNECT</button>
           </div>
 
           <!--Connection state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
             data-state="conn"
             data-active="false">
-            <div class="mx-auto h-16 w-16 animate-spin rounded-full border-6 border-t-accent-2"></div>
-            <h2 class="text-3xl font-bold uppercase">JACKING IN...</h2>
+            <div class="h-14 w-14 animate-spin rounded-full border-6 border-t-accent-2"></div>
+            <h2 class="text-2xl font-bold uppercase sm:text-3xl">JACKING IN...</h2>
           </div>
 
           <!--Connection Error state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
             data-state="cerr"
             data-active="false">
             <div
-              class="w-full -rotate-2 border-4 bg-accent-1 p-6 text-center text-xl font-bold text-white shadow-brutal-md">
+              class="w-full -rotate-2 border-4 bg-accent-1 p-5 text-center text-lg font-bold text-white shadow-brutal-md">
               CRITICAL: CONNECTION FAILED
             </div>
-            <button id="receive-retry-cerr" class="mt-6 btn btn-danger">RETRY</button>
+            <button id="receive-retry-cerr" class="mt-4 btn btn-danger">RETRY</button>
           </div>
 
           <!--Ready state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center data-[active=false]:hidden"
             data-state="ready"
             data-active="false">
             <span class="mb-5 icon">✨</span>
-            <h2 class="text-3xl font-bold uppercase">LINK ESTABLISHED</h2>
-            <div class="my-8 flex items-center gap-5">
-              <div id="receive-filename" class="max-w-48 truncate badge bg-accent-3"></div>
-              <div id="receive-filesize" class="badge bg-accent-5 text-white"></div>
+            <h2 class="text-2xl font-bold uppercase sm:text-3xl">LINK ESTABLISHED</h2>
+            <div class="my-6 flex flex-wrap items-center justify-center gap-4">
+              <div id="receive-filename" class="max-w-48 min-w-0 truncate badge bg-accent-3"></div>
+              <div id="receive-filesize" class="shrink-0 truncate badge bg-accent-5 text-white"></div>
             </div>
-            <button id="receive-download-btn" class="mt-6 btn btn-primary">DOWNLOAD NOW</button>
+            <button id="receive-download-btn" class="mt-4 btn btn-primary">DOWNLOAD NOW</button>
           </div>
 
           <!--Download state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center gap-4 data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center gap-4 data-[active=false]:hidden"
             data-state="dl"
             data-active="false">
-            <h2 class="text-3xl font-bold uppercase">PULLING DATA</h2>
-            <div class="relative my-4 w-full">
-              <div class="h-12 w-full overflow-hidden rounded-lg border-4 shadow-brutal-md">
+            <h2 class="text-2xl font-bold uppercase sm:text-3xl">PULLING DATA</h2>
+            <div class="relative my-2 w-full">
+              <div class="h-11 w-full overflow-hidden rounded-lg border-4 shadow-brutal-md">
                 <div
                   id="receive-progress-bar"
                   class="h-full w-0 animate-stripe-march border-r-4 bg-accent-2 bg-[linear-gradient(45deg,rgba(0,0,0,0.1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.1)_75%,transparent_75%,transparent)] bg-size-[20px_20px] transition-[width] duration-300"></div>
               </div>
               <span
                 id="receive-progress-pct"
-                class="pointer-events-none absolute top-1/2 text-2xl font-bold whitespace-nowrap"
+                class="pointer-events-none absolute top-1/2 text-xl font-bold whitespace-nowrap"
                 style="left: 0%; transform: translate(8px, -50%); transition: left 300ms"
                 >0%</span
               >
             </div>
-            <p id="receive-progress-tnf" class="text-center text-3xl font-bold">...</p>
-            <button id="receive-cancel-dl" class="mt-4 btn btn-danger">CANCEL</button>
+            <p id="receive-progress-tnf" class="text-center text-2xl font-bold">...</p>
+            <button id="receive-cancel-dl" class="mt-2 btn btn-danger">CANCEL</button>
           </div>
 
           <!--Download Error state-->
           <div
-            class="flex animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
+            class="flex flex-1 animate-popin flex-col items-center justify-center gap-6 data-[active=false]:hidden"
             data-state="derr"
             data-active="false">
             <div
-              class="w-full -rotate-2 border-4 bg-accent-1 p-6 text-center text-xl font-bold text-white shadow-brutal-md">
+              class="w-full -rotate-2 border-4 bg-accent-1 p-5 text-center text-lg font-bold text-white shadow-brutal-md">
               CRITICAL: DOWNLOAD ABORTED
             </div>
-            <button id="receive-retry-derr" class="mt-6 btn btn-danger">RETRY</button>
+            <button id="receive-retry-derr" class="mt-4 btn btn-danger">RETRY</button>
           </div>
         </div>
       </div>
 
-      <footer class="p-4">
+      <footer class="shrink-0 p-3">
         <button class="cursor-pointer hover:underline">Help?</button>
       </footer>
     </div>

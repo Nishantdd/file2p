@@ -1,5 +1,5 @@
 @utility btn {
-  @apply inline-block cursor-pointer rounded-sm border-4 bg-card px-8 py-4 text-lg font-bold uppercase shadow-brutal-md transition-all duration-100 hover:-translate-0.5 hover:shadow-brutal-lg active:translate-1 active:shadow-brutal-xs;
+  @apply inline-block min-w-0 cursor-pointer truncate rounded-sm border-4 bg-card px-8 py-4 text-lg font-bold uppercase shadow-brutal-md transition-all duration-100 hover:-translate-0.5 hover:shadow-brutal-lg active:translate-1 active:shadow-brutal-xs;
 }
 
 @utility btn-primary {
@@ -11,7 +11,7 @@
 }
 
 @utility input-code {
-  @apply w-full max-w-sm rounded-sm border-4 bg-card p-5 text-center text-2xl font-bold uppercase shadow-brutal-md focus:bg-accent-3 focus:outline-none;
+  @apply w-full rounded-sm border-4 bg-card p-5 text-center text-2xl font-bold uppercase shadow-brutal-md focus:bg-accent-3 focus:outline-none;
 }
 
 @utility icon {
