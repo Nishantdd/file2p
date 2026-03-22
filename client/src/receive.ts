@@ -191,14 +191,6 @@ const handleDownload = async () => {
   ws.send(JSON.stringify({ type: "make:offer", offer: p.localDescription }));
 };
 
-codeInput.addEventListener("click", async () => {
-  const existingCode = codeInput.value;
-  const clipboardText = (await navigator.clipboard.readText()).trim();
-  if (clipboardText.length === 6 && clipboardText !== existingCode) {
-    codeInput.value = clipboardText;
-  }
-});
-
 connectBtn.addEventListener("click", () => {
   const code = codeInput.value.trim().toUpperCase();
   if (!code) return;
