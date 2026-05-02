@@ -32,13 +32,31 @@ const closePeer = () => {
   peer = null;
 };
 
-const handleFileSelect = async (file: File) => {
-  clearInterval(heartbeatInterval);
+const closeSocket = () => {
   currentSocket?.close();
   currentSocket = null;
-  closePeer();
+}
 
-  const p = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+const handleFileSelect = async (file: File) => {
+  clearInterval(heartbeatInterval);
+  closePeer();
+  closeSocket();
+
+  const p = new RTCPeerConnection({
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun.l.google.com:5349" },
+      { urls: "stun:stun1.l.google.com:3478" },
+      { urls: "stun:stun1.l.google.com:5349" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:5349" },
+      { urls: "stun:stun3.l.google.com:3478" },
+      { urls: "stun:stun3.l.google.com:5349" },
+      { urls: "stun:stun4.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:5349" }
+    ]
+  });
+
   peer = p;
 
   const transferId = generateTransferId();
@@ -151,10 +169,9 @@ sendCopyBtn.addEventListener("click", async () => {
 });
 
 sendResetBtn.addEventListener("click", () => {
-  clearInterval(heartbeatInterval);
-  currentSocket?.close();
-  currentSocket = null;
   fileInput.value = "";
+  clearInterval(heartbeatInterval);
   closePeer();
+  closeSocket();
   switchSendStates(sendStates, "upload");
 });
