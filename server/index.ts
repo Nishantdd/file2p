@@ -120,6 +120,11 @@ const server = Bun.serve({
       if (ws.data.role === "host") {
         hostSocketMap.delete(ws.data.transferId);
         fileMetadataMap.delete(ws.data.transferId);
+        leecherSocketMap.get(ws.data.transferId)?.send(
+          JSON.stringify({
+            type: "sender:disconnected",
+          }),
+        );
       } else {
         leecherSocketMap.delete(ws.data.transferId);
         hostSocketMap.get(ws.data.transferId)?.send(

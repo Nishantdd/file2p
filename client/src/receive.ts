@@ -111,7 +111,6 @@ const createTransferPeer = (ws: WebSocket) => {
 
   p.onconnectionstatechange = () => {
     if (p.connectionState === "failed" || p.connectionState === "disconnected") {
-      setReceiveFooterStatus("Sender disconnected", "offline");
       if (channel) switchReceiveStates(receiveStates, "derr");
     } else if (p.connectionState === "connected") {
       setReceiveFooterStatus("Sender online", "online");
@@ -151,6 +150,8 @@ const startConnection = (transferId: string) => {
       await peer?.setRemoteDescription(new RTCSessionDescription(msg.answer));
     } else if (msg.type === "transfer:candidate") {
       await peer?.addIceCandidate(msg.candidate);
+    } else if (msg.type === "sender:disconnected") {
+      setReceiveFooterStatus("Sender disconnected", "offline");
     }
   });
 };
