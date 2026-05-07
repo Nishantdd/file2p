@@ -74,16 +74,6 @@
                 </div>
               </div>
               <input id="send-code" type="text" readonly class="input-code" />
-              <div class="w-full">
-                <div class="h-8 w-full overflow-hidden rounded-lg border-4 shadow-brutal-md">
-                  <div
-                    id="send-progress-bar"
-                    class="h-full w-0 animate-stripe-march border-r-4 bg-accent-4 bg-[linear-gradient(45deg,rgba(0,0,0,0.1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.1)_75%,transparent_75%,transparent)] bg-size-[20px_20px] transition-[width] duration-300"></div>
-                </div>
-                <p id="send-transfer-status" class="mt-3 text-center text-lg font-bold uppercase">
-                  WAITING FOR RECEIVER
-                </p>
-              </div>
               <div class="flex w-full gap-4">
                 <button id="send-copy-btn" class="btn flex-1 btn-primary">COPY CODE</button>
                 <button id="send-reset-btn" class="btn flex-1">CHANGE FILE</button>
@@ -189,8 +179,22 @@
         </div>
       </div>
 
-      <footer class="shrink-0 p-3">
+      <footer class="flex shrink-0 items-center justify-between gap-3 p-3">
         <button class="cursor-pointer hover:underline">Help?</button>
+        <div
+          class="flex items-center gap-2 text-sm font-bold uppercase data-[active=false]:hidden"
+          data-panel="send"
+          data-active="true">
+          <span id="send-footer-label">No receiver</span>
+          <span id="send-footer-indicator" class="status-indicator" data-state="idle"></span>
+        </div>
+        <div
+          class="flex items-center gap-2 text-sm font-bold uppercase data-[active=false]:hidden"
+          data-panel="receive"
+          data-active="false">
+          <span id="receive-footer-label">Sender disconnected</span>
+          <span id="receive-footer-indicator" class="status-indicator" data-state="offline"></span>
+        </div>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>

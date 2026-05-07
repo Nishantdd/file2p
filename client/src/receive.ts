@@ -7,22 +7,8 @@ import {
   formatBytes,
   formatSpeed,
   parseControlMessage
-} from "./transfer";
-
-type FileSystemWritableFileStream = {
-  write: (data: BlobPart) => Promise<void>;
-  close: () => Promise<void>;
-  abort?: () => Promise<void>;
-};
-
-type FileSystemFileHandle = {
-  createWritable: () => Promise<FileSystemWritableFileStream>;
-};
-
-type WindowWithSavePicker = Window &
-  typeof globalThis & {
-    showSaveFilePicker?: (options?: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
-  };
+} from "./helpers/transfer";
+import type { FileSystemWritableFileStream, WindowWithSavePicker } from "./types/transfer.types";
 
 const tabs = document.querySelectorAll<HTMLButtonElement>("[data-tab]");
 const panels = document.querySelectorAll<HTMLDivElement>("[data-panel]");
@@ -39,6 +25,8 @@ const progressPct = document.getElementById("receive-progress-pct") as HTMLEleme
 const progressTnf = document.getElementById("receive-progress-tnf") as HTMLElement;
 const cancelDlBtn = document.getElementById("receive-cancel-dl") as HTMLButtonElement;
 const retryDerrBtn = document.getElementById("receive-retry-derr") as HTMLButtonElement;
+const receiveFooterLabel = document.getElementById("receive-footer-label") as HTMLElement;
+const receiveFooterIndicator = document.getElementById("receive-footer-indicator") as HTMLElement;
 
 const syncUrl = (transferId: string | null) => {
   const url = transferId
@@ -66,25 +54,35 @@ let lastUiUpdate = 0;
 
 const LABEL_THRESHOLD = 11;
 
-const cleanup = () => {
-  clearInterval(heartbeatInterval);
+const setReceiveFooterStatus = (label: string, state: "online" | "offline") => {
+  receiveFooterLabel.textContent = label;
+  receiveFooterIndicator.dataset.state = state;
+};
+
+const closeTransferPeer = (notifyCancel: boolean) => {
   if (channel) {
-    if (channel.readyState === "open") {
+    if (notifyCancel && channel.readyState === "open") {
       channel.send(encodeControlMessage({ type: "transfer:cancel" }));
     }
     channel.onmessage = null;
     channel.onerror = null;
+    channel.onclose = null;
     channel.close();
     channel = null;
   }
-  void fileWriter?.abort?.();
-  fileWriter = null;
   if (peer) {
     peer.onicecandidate = null;
     peer.onconnectionstatechange = null;
     peer.close();
     peer = null;
   }
+};
+
+const cleanup = () => {
+  clearInterval(heartbeatInterval);
+  closeTransferPeer(true);
+  void fileWriter?.abort?.();
+  fileWriter = null;
   if (socket) {
     socket.close();
     socket = null;
@@ -96,15 +94,38 @@ const cleanup = () => {
   lastMeasureSize = 0;
   lastUiUpdate = 0;
   downloadBtn.disabled = false;
+  setReceiveFooterStatus("Sender disconnected", "offline");
+};
+
+const createTransferPeer = (ws: WebSocket) => {
+  closeTransferPeer(false);
+
+  const p = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+  peer = p;
+
+  p.onicecandidate = event => {
+    if (event.candidate) {
+      ws.send(JSON.stringify({ type: "transfer:candidate", candidate: event.candidate }));
+    }
+  };
+
+  p.onconnectionstatechange = () => {
+    if (p.connectionState === "failed" || p.connectionState === "disconnected") {
+      setReceiveFooterStatus("Sender disconnected", "offline");
+      if (channel) switchReceiveStates(receiveStates, "derr");
+    } else if (p.connectionState === "connected") {
+      setReceiveFooterStatus("Sender online", "online");
+    }
+  };
+
+  return p;
 };
 
 const startConnection = (transferId: string) => {
   cleanup();
   currentTransferId = transferId;
 
-  const p = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
   const ws = new WebSocket(`${config.SERVER_ADDR}?transferId=${encodeURIComponent(transferId)}`);
-  peer = p;
   socket = ws;
 
   ws.addEventListener("open", () => {
@@ -124,32 +145,20 @@ const startConnection = (transferId: string) => {
       filesize = msg.filesize;
       receiveFilename.textContent = filename;
       receiveFilesize.textContent = `${(filesize / 1048576).toFixed(2)} MB`;
+      setReceiveFooterStatus("Sender online", "online");
       switchReceiveStates(receiveStates, "ready");
     } else if (msg.type === "incoming:answer") {
-      await p.setRemoteDescription(new RTCSessionDescription(msg.answer));
+      await peer?.setRemoteDescription(new RTCSessionDescription(msg.answer));
     } else if (msg.type === "transfer:candidate") {
-      await p.addIceCandidate(msg.candidate);
+      await peer?.addIceCandidate(msg.candidate);
     }
   });
-
-  p.onicecandidate = event => {
-    if (event.candidate) {
-      ws.send(JSON.stringify({ type: "transfer:candidate", candidate: event.candidate }));
-    }
-  };
-
-  p.onconnectionstatechange = () => {
-    if (p.connectionState === "failed" || p.connectionState === "disconnected") {
-      switchReceiveStates(receiveStates, "derr");
-    }
-  };
 };
 
 const handleDownload = async () => {
-  if (channel || !socket || !peer) return;
+  if (channel || !socket) return;
   downloadBtn.disabled = true;
 
-  const p = peer;
   const ws = socket;
   const savePicker = (window as WindowWithSavePicker).showSaveFilePicker;
   if (savePicker) {
@@ -164,6 +173,7 @@ const handleDownload = async () => {
     }
   }
 
+  const p = createTransferPeer(ws);
   const ch = p.createDataChannel(DATA_CHANNEL_LABEL, { ordered: true });
   ch.binaryType = "arraybuffer";
   channel = ch;
@@ -216,6 +226,7 @@ const handleDownload = async () => {
     updateProgress(true);
     ch.close();
     channel = null;
+    closeTransferPeer(false);
 
     if (fileWriter) {
       await writerQueue;
@@ -234,6 +245,7 @@ const handleDownload = async () => {
 
     dataArray = [];
     downloadBtn.disabled = false;
+    setReceiveFooterStatus("Sender online", "online");
     switchReceiveStates(receiveStates, "ready");
   };
 
@@ -251,13 +263,13 @@ const handleDownload = async () => {
         void finishDownload(controlMessage.bytesSent).catch(() => {
           void fileWriter?.abort?.();
           fileWriter = null;
-          channel = null;
+          closeTransferPeer(false);
           switchReceiveStates(receiveStates, "derr");
         });
       } else if (controlMessage.type === "transfer:error" || controlMessage.type === "transfer:cancel") {
         void fileWriter?.abort?.();
         fileWriter = null;
-        channel = null;
+        closeTransferPeer(false);
         switchReceiveStates(receiveStates, "derr");
       }
       return;
@@ -272,7 +284,7 @@ const handleDownload = async () => {
         .catch(() => {
           void fileWriter?.abort?.();
           fileWriter = null;
-          channel = null;
+          closeTransferPeer(false);
           switchReceiveStates(receiveStates, "derr");
         });
     } else {
@@ -283,9 +295,9 @@ const handleDownload = async () => {
   };
 
   ch.onerror = () => {
-    channel = null;
     void fileWriter?.abort?.();
     fileWriter = null;
+    closeTransferPeer(false);
     switchReceiveStates(receiveStates, "derr");
   };
 

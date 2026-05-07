@@ -7,10 +7,9 @@ import {
   DATA_CHANNEL_LABEL,
   UI_UPDATE_INTERVAL_MS,
   encodeControlMessage,
-  formatSpeed,
   getUsableChunkSize,
   parseControlMessage
-} from "./transfer";
+} from "./helpers/transfer";
 
 const dropzone = document.getElementById("send-dropzone") as HTMLDivElement;
 const fileInput = document.getElementById("send-file-input") as HTMLInputElement;
@@ -18,8 +17,8 @@ const sendQR = document.getElementById("send-qr") as HTMLDivElement;
 const sendFilename = document.getElementById("send-filename") as HTMLElement;
 const sendFilesize = document.getElementById("send-filesize") as HTMLElement;
 const sendCode = document.getElementById("send-code") as HTMLInputElement;
-const sendTransferStatus = document.getElementById("send-transfer-status") as HTMLElement;
-const sendProgressBar = document.getElementById("send-progress-bar") as HTMLDivElement;
+const sendFooterLabel = document.getElementById("send-footer-label") as HTMLElement;
+const sendFooterIndicator = document.getElementById("send-footer-indicator") as HTMLElement;
 const sendCopyBtn = document.getElementById("send-copy-btn") as HTMLButtonElement;
 const sendResetBtn = document.getElementById("send-reset-btn") as HTMLButtonElement;
 const sendStates = document.querySelectorAll<HTMLDivElement>("#send-panel > div[data-state]");
@@ -29,6 +28,7 @@ let channel: RTCDataChannel | null = null;
 let currentSocket: WebSocket | null = null;
 let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
 let abortTransfer: (() => void) | null = null;
+let transferCompleted = false;
 
 const generateTransferId = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -59,9 +59,14 @@ const closeSocket = () => {
   currentSocket = null;
 };
 
+const setSendFooterStatus = (label: string, state: "idle" | "connected" | "progress" | "complete", progress = 0) => {
+  sendFooterLabel.textContent = label;
+  sendFooterIndicator.dataset.state = state;
+  sendFooterIndicator.style.setProperty("--progress", `${Math.min(100, Math.max(0, progress))}%`);
+};
+
 const resetSendProgress = () => {
-  sendTransferStatus.textContent = "WAITING FOR RECEIVER";
-  sendProgressBar.style.width = "0%";
+  setSendFooterStatus("No receiver", "idle");
 };
 
 const waitForBufferLow = (ch: RTCDataChannel, signal: AbortSignal) =>
@@ -104,14 +109,81 @@ const waitForBufferLow = (ch: RTCDataChannel, signal: AbortSignal) =>
     signal.addEventListener("abort", handleAbort, { once: true });
   });
 
+const createHostPeer = (socket: WebSocket, file: File) => {
+  const p = new RTCPeerConnection({
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun.l.google.com:5349" },
+      { urls: "stun:stun1.l.google.com:3478" },
+      { urls: "stun:stun1.l.google.com:5349" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:5349" },
+      { urls: "stun:stun3.l.google.com:3478" },
+      { urls: "stun:stun3.l.google.com:5349" },
+      { urls: "stun:stun4.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:5349" }
+    ]
+  });
+
+  peer = p;
+  transferCompleted = false;
+
+  p.onicecandidate = event => {
+    if (event.candidate) {
+      socket.send(JSON.stringify({ type: "transfer:candidate", candidate: event.candidate }));
+    }
+  };
+
+  p.onconnectionstatechange = () => {
+    if (p.connectionState === "failed" || p.connectionState === "disconnected") {
+      if (!transferCompleted) setSendFooterStatus("No receiver", "idle");
+      abortTransfer?.();
+    }
+  };
+
+  p.ondatachannel = event => {
+    if (event.channel.label !== DATA_CHANNEL_LABEL) {
+      event.channel.close();
+      return;
+    }
+
+    const ch = event.channel;
+    channel = ch;
+    setSendFooterStatus("Receiver connected", "connected");
+
+    ch.onopen = () => {
+      const controller = new AbortController();
+      abortTransfer = () => controller.abort();
+      void streamFile(file, ch, p, controller.signal).catch(() => undefined);
+    };
+
+    ch.onmessage = event => {
+      const controlMessage = parseControlMessage(event.data);
+      if (controlMessage?.type === "transfer:cancel") {
+        abortTransfer?.();
+      }
+    };
+
+    ch.onclose = () => {
+      ch.onmessage = null;
+      channel = null;
+      abortTransfer = null;
+    };
+
+    ch.onerror = () => {
+      setSendFooterStatus("No receiver", "idle");
+      abortTransfer?.();
+    };
+  };
+
+  return p;
+};
+
 const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, signal: AbortSignal) => {
   const chunkSize = getUsableChunkSize(p);
   const reader = file.stream().getReader();
   let pending: Uint8Array<ArrayBuffer> = new Uint8Array(0);
   let bytesSent = 0;
-  let transferSpeed = 0;
-  let lastMeasureTime = Date.now();
-  let lastMeasureSize = 0;
   let lastUiUpdate = 0;
 
   ch.bufferedAmountLowThreshold = BUFFER_LOW_WATER;
@@ -121,17 +193,8 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
     const now = Date.now();
     if (!force && now - lastUiUpdate < UI_UPDATE_INTERVAL_MS) return;
 
-    const elapsed = (now - lastMeasureTime) / 1000;
-    if (elapsed >= 0.5) {
-      transferSpeed = (bytesSent - lastMeasureSize) / elapsed;
-      lastMeasureTime = now;
-      lastMeasureSize = bytesSent;
-    }
-
     const percentage = file.size ? Math.min(100, Math.floor((bytesSent / file.size) * 100)) : 100;
-    sendProgressBar.style.width = `${percentage}%`;
-    sendTransferStatus.textContent =
-      transferSpeed > 0 ? `SENDING ${percentage}% - ${formatSpeed(transferSpeed)}` : `SENDING ${percentage}%`;
+    setSendFooterStatus("Receiver connected", "progress", percentage);
     lastUiUpdate = now;
   };
 
@@ -170,8 +233,8 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
     if (pending.byteLength) sendChunk(pending);
     await waitForBufferLow(ch, signal);
     ch.send(encodeControlMessage({ type: "transfer:complete", bytesSent }));
-    sendProgressBar.style.width = "100%";
-    sendTransferStatus.textContent = "TRANSFER COMPLETE";
+    transferCompleted = true;
+    setSendFooterStatus("Download Completed", "complete", 100);
   } catch (error) {
     await reader.cancel().catch(() => undefined);
     if (ch.readyState === "open") {
@@ -183,9 +246,9 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
       }
     }
     if (error instanceof DOMException && error.name === "AbortError") {
-      sendTransferStatus.textContent = "TRANSFER CANCELLED";
+      setSendFooterStatus("Receiver connected", "connected");
     } else {
-      sendTransferStatus.textContent = "TRANSFER FAILED";
+      setSendFooterStatus("No receiver", "idle");
     }
     throw error;
   } finally {
@@ -197,23 +260,6 @@ const handleFileSelect = async (file: File) => {
   clearInterval(heartbeatInterval);
   closePeer();
   closeSocket();
-
-  const p = new RTCPeerConnection({
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun.l.google.com:5349" },
-      { urls: "stun:stun1.l.google.com:3478" },
-      { urls: "stun:stun1.l.google.com:5349" },
-      { urls: "stun:stun2.l.google.com:19302" },
-      { urls: "stun:stun2.l.google.com:5349" },
-      { urls: "stun:stun3.l.google.com:3478" },
-      { urls: "stun:stun3.l.google.com:5349" },
-      { urls: "stun:stun4.l.google.com:19302" },
-      { urls: "stun:stun4.l.google.com:5349" }
-    ]
-  });
-
-  peer = p;
 
   const transferId = generateTransferId();
   const link = new URL(`/?transferId=${encodeURIComponent(transferId)}`, config.APP_ADDR).toString();
@@ -245,61 +291,16 @@ const handleFileSelect = async (file: File) => {
   socket.addEventListener("message", async event => {
     const msg = JSON.parse(event.data);
     if (msg.type === "incoming:offer") {
+      closePeer();
+      const p = createHostPeer(socket, file);
       await p.setRemoteDescription(new RTCSessionDescription(msg.offer));
       const answer = await p.createAnswer();
       await p.setLocalDescription(answer);
       socket.send(JSON.stringify({ type: "make:answer", answer: p.localDescription }));
     } else if (msg.type === "transfer:candidate") {
-      await p.addIceCandidate(msg.candidate);
+      await peer?.addIceCandidate(msg.candidate);
     }
   });
-
-  p.onicecandidate = event => {
-    if (event.candidate) {
-      socket.send(JSON.stringify({ type: "transfer:candidate", candidate: event.candidate }));
-    }
-  };
-
-  p.onconnectionstatechange = () => {
-    if (p.connectionState === "failed" || p.connectionState === "disconnected") {
-      sendTransferStatus.textContent = "CONNECTION LOST";
-      abortTransfer?.();
-    }
-  };
-
-  p.ondatachannel = event => {
-    if (event.channel.label !== DATA_CHANNEL_LABEL) {
-      event.channel.close();
-      return;
-    }
-
-    const ch = event.channel;
-    channel = ch;
-
-    ch.onopen = () => {
-      const controller = new AbortController();
-      abortTransfer = () => controller.abort();
-      void streamFile(file, ch, p, controller.signal).catch(() => undefined);
-    };
-
-    ch.onmessage = event => {
-      const controlMessage = parseControlMessage(event.data);
-      if (controlMessage?.type === "transfer:cancel") {
-        abortTransfer?.();
-      }
-    };
-
-    ch.onclose = () => {
-      ch.onmessage = null;
-      channel = null;
-      abortTransfer = null;
-    };
-
-    ch.onerror = () => {
-      sendTransferStatus.textContent = "TRANSFER FAILED";
-      abortTransfer?.();
-    };
-  };
 };
 
 dropzone.addEventListener("dragover", e => {
@@ -341,5 +342,6 @@ sendResetBtn.addEventListener("click", () => {
   clearInterval(heartbeatInterval);
   closePeer();
   closeSocket();
+  resetSendProgress();
   switchSendStates(sendStates, "upload");
 });

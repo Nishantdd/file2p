@@ -23,6 +23,60 @@
   }
 }
 
+@layer components {
+  .status-indicator {
+    --progress: 0%;
+    position: relative;
+    display: inline-grid;
+    width: 0.75rem;
+    height: 0.75rem;
+    flex: none;
+    place-items: center;
+    border-radius: 9999px;
+    background: var(--accent-1);
+  }
+
+  .status-indicator[data-state="connected"],
+  .status-indicator[data-state="online"] {
+    background: var(--accent-4);
+  }
+
+  .status-indicator[data-state="offline"],
+  .status-indicator[data-state="idle"] {
+    background: var(--accent-1);
+  }
+
+  .status-indicator[data-state="progress"] {
+    background: conic-gradient(var(--accent-2) var(--progress), transparent 0);
+    border: 2px solid var(--border);
+    animation: spin 0.9s linear infinite;
+  }
+
+  .status-indicator[data-state="progress"]::after {
+    content: "";
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--bg-card);
+  }
+
+  .status-indicator[data-state="complete"] {
+    width: 1rem;
+    height: 1rem;
+    background: var(--accent-4);
+    border: 2px solid var(--border);
+  }
+
+  .status-indicator[data-state="complete"]::after {
+    content: "";
+    width: 0.35rem;
+    height: 0.55rem;
+    border-right: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    transform: translateY(-1px) rotate(45deg);
+  }
+}
+
 @media (pointer: fine) {
   * {
     cursor:
