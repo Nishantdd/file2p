@@ -1,3 +1,5 @@
+import type { TransferControlMessage } from "../types/transfer.types";
+
 export const DATA_CHANNEL_LABEL = "file-transfer";
 
 export const DEFAULT_CHUNK_SIZE = 64 * 1024;
@@ -5,25 +7,6 @@ export const MAX_COMPATIBLE_CHUNK_SIZE = 256 * 1024;
 export const BUFFER_HIGH_WATER = 8 * 1024 * 1024;
 export const BUFFER_LOW_WATER = 2 * 1024 * 1024;
 export const UI_UPDATE_INTERVAL_MS = 150;
-
-export type TransferControlMessage =
-  | {
-      type: "transfer:start";
-      filename: string;
-      filesize: number;
-      chunkSize: number;
-    }
-  | {
-      type: "transfer:complete";
-      bytesSent: number;
-    }
-  | {
-      type: "transfer:cancel";
-    }
-  | {
-      type: "transfer:error";
-      message: string;
-    };
 
 export const encodeControlMessage = (message: TransferControlMessage) => JSON.stringify(message);
 
