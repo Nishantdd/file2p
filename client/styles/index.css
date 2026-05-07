@@ -47,17 +47,10 @@
   }
 
   .status-indicator[data-state="progress"] {
-    background: conic-gradient(var(--accent-2) var(--progress), transparent 0);
+    width: 1rem;
+    height: 1rem;
+    background: conic-gradient(from -90deg, var(--accent-2) var(--progress), var(--bg-card) 0);
     border: 2px solid var(--border);
-    animation: spin 0.9s linear infinite;
-  }
-
-  .status-indicator[data-state="progress"]::after {
-    content: "";
-    width: 0.25rem;
-    height: 0.25rem;
-    border-radius: 9999px;
-    background: var(--bg-card);
   }
 
   .status-indicator[data-state="complete"] {
