@@ -246,7 +246,7 @@ const handleDownload = async () => {
     dataArray = [];
     downloadBtn.disabled = false;
     setReceiveFooterStatus("Sender online", "online");
-    switchReceiveStates(receiveStates, "ready");
+    switchReceiveStates(receiveStates, "input");
   };
 
   ch.onmessage = event => {

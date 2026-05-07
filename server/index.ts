@@ -62,6 +62,11 @@ const server = Bun.serve({
         });
       } else {
         leecherSocketMap.set(ws.data.transferId, ws);
+        hostSocketMap.get(ws.data.transferId)?.send(
+          JSON.stringify({
+            type: "receiver:connected",
+          }),
+        );
         const fileMetadata = fileMetadataMap.get(ws.data.transferId)!;
         ws.send(
           JSON.stringify({
@@ -117,6 +122,11 @@ const server = Bun.serve({
         fileMetadataMap.delete(ws.data.transferId);
       } else {
         leecherSocketMap.delete(ws.data.transferId);
+        hostSocketMap.get(ws.data.transferId)?.send(
+          JSON.stringify({
+            type: "receiver:disconnected",
+          }),
+        );
       }
     },
   },

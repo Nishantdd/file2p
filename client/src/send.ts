@@ -149,7 +149,7 @@ const createHostPeer = (socket: WebSocket, file: File) => {
 
     const ch = event.channel;
     channel = ch;
-    setSendFooterStatus("Receiver connected", "connected");
+    setSendFooterStatus("Receiver online", "connected");
 
     ch.onopen = () => {
       const controller = new AbortController();
@@ -194,7 +194,7 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
     if (!force && now - lastUiUpdate < UI_UPDATE_INTERVAL_MS) return;
 
     const percentage = file.size ? Math.min(100, Math.floor((bytesSent / file.size) * 100)) : 100;
-    setSendFooterStatus("Receiver connected", "progress", percentage);
+    setSendFooterStatus("Receiver online", "progress", percentage);
     lastUiUpdate = now;
   };
 
@@ -246,7 +246,7 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
       }
     }
     if (error instanceof DOMException && error.name === "AbortError") {
-      setSendFooterStatus("Receiver connected", "connected");
+      setSendFooterStatus("Receiver online", "connected");
     } else {
       setSendFooterStatus("No receiver", "idle");
     }
@@ -299,6 +299,10 @@ const handleFileSelect = async (file: File) => {
       socket.send(JSON.stringify({ type: "make:answer", answer: p.localDescription }));
     } else if (msg.type === "transfer:candidate") {
       await peer?.addIceCandidate(msg.candidate);
+    } else if (msg.type === "receiver:connected") {
+      setSendFooterStatus("Receiver online", "connected");
+    } else if (msg.type === "receiver:disconnected") {
+      setSendFooterStatus("No receiver", "idle");
     }
   });
 };
