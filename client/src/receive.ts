@@ -1,5 +1,28 @@
 import { switchReceiveStates, switchTabs } from "./helpers/switch-helpers";
 import { config } from "./config";
+import {
+  DATA_CHANNEL_LABEL,
+  UI_UPDATE_INTERVAL_MS,
+  encodeControlMessage,
+  formatBytes,
+  formatSpeed,
+  parseControlMessage
+} from "./transfer";
+
+type FileSystemWritableFileStream = {
+  write: (data: BlobPart) => Promise<void>;
+  close: () => Promise<void>;
+  abort?: () => Promise<void>;
+};
+
+type FileSystemFileHandle = {
+  createWritable: () => Promise<FileSystemWritableFileStream>;
+};
+
+type WindowWithSavePicker = Window &
+  typeof globalThis & {
+    showSaveFilePicker?: (options?: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+  };
 
 const tabs = document.querySelectorAll<HTMLButtonElement>("[data-tab]");
 const panels = document.querySelectorAll<HTMLDivElement>("[data-panel]");
@@ -33,22 +56,29 @@ let currentTransferId = "";
 let filename = "";
 let filesize = 0;
 let dataArray: BlobPart[] = [];
+let fileWriter: FileSystemWritableFileStream | null = null;
 let receivedSize = 0;
 
 export let transferSpeed = 0;
 let lastMeasureTime = 0;
 let lastMeasureSize = 0;
+let lastUiUpdate = 0;
 
 const LABEL_THRESHOLD = 11;
 
 const cleanup = () => {
   clearInterval(heartbeatInterval);
   if (channel) {
+    if (channel.readyState === "open") {
+      channel.send(encodeControlMessage({ type: "transfer:cancel" }));
+    }
     channel.onmessage = null;
     channel.onerror = null;
     channel.close();
     channel = null;
   }
+  void fileWriter?.abort?.();
+  fileWriter = null;
   if (peer) {
     peer.onicecandidate = null;
     peer.onconnectionstatechange = null;
@@ -64,6 +94,7 @@ const cleanup = () => {
   transferSpeed = 0;
   lastMeasureTime = 0;
   lastMeasureSize = 0;
+  lastUiUpdate = 0;
   downloadBtn.disabled = false;
 };
 
@@ -120,7 +151,20 @@ const handleDownload = async () => {
 
   const p = peer;
   const ws = socket;
-  const ch = p.createDataChannel("file-transfer");
+  const savePicker = (window as WindowWithSavePicker).showSaveFilePicker;
+  if (savePicker) {
+    try {
+      const handle = await savePicker({
+        suggestedName: filename
+      });
+      fileWriter = await handle.createWritable();
+    } catch {
+      downloadBtn.disabled = false;
+      return;
+    }
+  }
+
+  const ch = p.createDataChannel(DATA_CHANNEL_LABEL, { ordered: true });
   ch.binaryType = "arraybuffer";
   channel = ch;
 
@@ -128,6 +172,7 @@ const handleDownload = async () => {
   receivedSize = 0;
   lastMeasureTime = Date.now();
   lastMeasureSize = 0;
+  lastUiUpdate = 0;
 
   progressBar.style.width = "0%";
   progressPct.textContent = "0%";
@@ -136,14 +181,47 @@ const handleDownload = async () => {
   progressTnf.textContent = "...";
 
   switchReceiveStates(receiveStates, "dl");
+  let writerQueue = Promise.resolve();
 
-  ch.onmessage = event => {
-    const { data } = event;
+  const updateProgress = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastUiUpdate < UI_UPDATE_INTERVAL_MS) return;
 
-    if (data === "done" || data.toString() === "done") {
-      ch.close();
-      channel = null;
+    const elapsed = (now - lastMeasureTime) / 1000;
+    if (elapsed >= 0.5) {
+      transferSpeed = (receivedSize - lastMeasureSize) / elapsed;
+      lastMeasureTime = now;
+      lastMeasureSize = receivedSize;
+    }
 
+    const percentage = filesize ? Math.min(100, Math.floor((receivedSize / filesize) * 100)) : 0;
+    progressBar.style.width = `${percentage}%`;
+    progressPct.textContent = `${percentage}%`;
+    progressPct.style.left = `${percentage}%`;
+    progressPct.style.transform =
+      percentage >= LABEL_THRESHOLD ? "translate(calc(-100% - 8px), -50%)" : "translate(8px, -50%)";
+
+    progressTnf.textContent =
+      transferSpeed > 0
+        ? `${formatSpeed(transferSpeed)} - ${formatBytes(receivedSize)} received`
+        : `${formatBytes(receivedSize)} received`;
+    lastUiUpdate = now;
+  };
+
+  const finishDownload = async (bytesSent: number) => {
+    if (receivedSize !== filesize || bytesSent !== receivedSize) {
+      throw new Error("Transfer size mismatch");
+    }
+
+    updateProgress(true);
+    ch.close();
+    channel = null;
+
+    if (fileWriter) {
+      await writerQueue;
+      await fileWriter.close();
+      fileWriter = null;
+    } else {
       const blob = new Blob(dataArray);
       const a = document.createElement("a");
       const url = window.URL.createObjectURL(blob);
@@ -152,37 +230,62 @@ const handleDownload = async () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-
-      dataArray = [];
-      downloadBtn.disabled = false;
-      switchReceiveStates(receiveStates, "ready");
-    } else {
-      dataArray.push(data);
-      receivedSize += (data as ArrayBuffer).byteLength;
-
-      const now = Date.now();
-      const elapsed = (now - lastMeasureTime) / 1000;
-      if (elapsed >= 0.5) {
-        transferSpeed = (receivedSize - lastMeasureSize) / elapsed;
-        lastMeasureTime = now;
-        lastMeasureSize = receivedSize;
-      }
-
-      const percentage = Math.min(100, Math.ceil((receivedSize / filesize) * 100));
-      progressBar.style.width = `${percentage}%`;
-      progressPct.textContent = `${percentage}%`;
-      progressPct.style.left = `${percentage}%`;
-      progressPct.style.transform =
-        percentage >= LABEL_THRESHOLD ? "translate(calc(-100% - 8px), -50%)" : "translate(8px, -50%)";
-
-      if (transferSpeed > 0) {
-        progressTnf.textContent = `${(transferSpeed / 1048576).toFixed(1)}MB/s - ${(receivedSize / 1048576).toFixed(1)}MB received`;
-      }
     }
+
+    dataArray = [];
+    downloadBtn.disabled = false;
+    switchReceiveStates(receiveStates, "ready");
+  };
+
+  ch.onmessage = event => {
+    const { data } = event;
+    const controlMessage = parseControlMessage(data);
+
+    if (controlMessage) {
+      if (controlMessage.type === "transfer:start") {
+        if (controlMessage.filename) filename = controlMessage.filename;
+        if (controlMessage.filesize) filesize = controlMessage.filesize;
+        receiveFilename.textContent = filename;
+        receiveFilesize.textContent = `${(filesize / 1048576).toFixed(2)} MB`;
+      } else if (controlMessage.type === "transfer:complete") {
+        void finishDownload(controlMessage.bytesSent).catch(() => {
+          void fileWriter?.abort?.();
+          fileWriter = null;
+          channel = null;
+          switchReceiveStates(receiveStates, "derr");
+        });
+      } else if (controlMessage.type === "transfer:error" || controlMessage.type === "transfer:cancel") {
+        void fileWriter?.abort?.();
+        fileWriter = null;
+        channel = null;
+        switchReceiveStates(receiveStates, "derr");
+      }
+      return;
+    }
+
+    const chunk = data as ArrayBuffer;
+    receivedSize += chunk.byteLength;
+
+    if (fileWriter) {
+      writerQueue = writerQueue
+        .then(() => fileWriter?.write(chunk))
+        .catch(() => {
+          void fileWriter?.abort?.();
+          fileWriter = null;
+          channel = null;
+          switchReceiveStates(receiveStates, "derr");
+        });
+    } else {
+      dataArray.push(chunk);
+    }
+
+    updateProgress();
   };
 
   ch.onerror = () => {
     channel = null;
+    void fileWriter?.abort?.();
+    fileWriter = null;
     switchReceiveStates(receiveStates, "derr");
   };
 

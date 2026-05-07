@@ -1,8 +1,16 @@
 import { switchSendStates } from "./helpers/switch-helpers";
 import { generateQR } from "./helpers/qr";
 import { config } from "./config";
-
-const CHUNK_SIZE = 256 * 1024;
+import {
+  BUFFER_HIGH_WATER,
+  BUFFER_LOW_WATER,
+  DATA_CHANNEL_LABEL,
+  UI_UPDATE_INTERVAL_MS,
+  encodeControlMessage,
+  formatSpeed,
+  getUsableChunkSize,
+  parseControlMessage
+} from "./transfer";
 
 const dropzone = document.getElementById("send-dropzone") as HTMLDivElement;
 const fileInput = document.getElementById("send-file-input") as HTMLInputElement;
@@ -10,13 +18,17 @@ const sendQR = document.getElementById("send-qr") as HTMLDivElement;
 const sendFilename = document.getElementById("send-filename") as HTMLElement;
 const sendFilesize = document.getElementById("send-filesize") as HTMLElement;
 const sendCode = document.getElementById("send-code") as HTMLInputElement;
+const sendTransferStatus = document.getElementById("send-transfer-status") as HTMLElement;
+const sendProgressBar = document.getElementById("send-progress-bar") as HTMLDivElement;
 const sendCopyBtn = document.getElementById("send-copy-btn") as HTMLButtonElement;
 const sendResetBtn = document.getElementById("send-reset-btn") as HTMLButtonElement;
 const sendStates = document.querySelectorAll<HTMLDivElement>("#send-panel > div[data-state]");
 
 let peer: RTCPeerConnection | null = null;
+let channel: RTCDataChannel | null = null;
 let currentSocket: WebSocket | null = null;
 let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+let abortTransfer: (() => void) | null = null;
 
 const generateTransferId = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -24,6 +36,16 @@ const generateTransferId = (): string => {
 };
 
 const closePeer = () => {
+  abortTransfer?.();
+  abortTransfer = null;
+  if (channel) {
+    channel.onopen = null;
+    channel.onclose = null;
+    channel.onerror = null;
+    channel.onbufferedamountlow = null;
+    channel.close();
+    channel = null;
+  }
   if (!peer) return;
   peer.onicecandidate = null;
   peer.ondatachannel = null;
@@ -35,7 +57,141 @@ const closePeer = () => {
 const closeSocket = () => {
   currentSocket?.close();
   currentSocket = null;
-}
+};
+
+const resetSendProgress = () => {
+  sendTransferStatus.textContent = "WAITING FOR RECEIVER";
+  sendProgressBar.style.width = "0%";
+};
+
+const waitForBufferLow = (ch: RTCDataChannel, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (ch.bufferedAmount <= ch.bufferedAmountLowThreshold) {
+      resolve();
+      return;
+    }
+
+    const cleanup = () => {
+      ch.removeEventListener("bufferedamountlow", handleLow);
+      ch.removeEventListener("close", handleClose);
+      ch.removeEventListener("error", handleError);
+      signal.removeEventListener("abort", handleAbort);
+    };
+
+    const handleLow = () => {
+      cleanup();
+      resolve();
+    };
+
+    const handleClose = () => {
+      cleanup();
+      reject(new Error("Data channel closed"));
+    };
+
+    const handleError = () => {
+      cleanup();
+      reject(new Error("Data channel error"));
+    };
+
+    const handleAbort = () => {
+      cleanup();
+      reject(new DOMException("Transfer cancelled", "AbortError"));
+    };
+
+    ch.addEventListener("bufferedamountlow", handleLow, { once: true });
+    ch.addEventListener("close", handleClose, { once: true });
+    ch.addEventListener("error", handleError, { once: true });
+    signal.addEventListener("abort", handleAbort, { once: true });
+  });
+
+const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, signal: AbortSignal) => {
+  const chunkSize = getUsableChunkSize(p);
+  const reader = file.stream().getReader();
+  let pending: Uint8Array<ArrayBuffer> = new Uint8Array(0);
+  let bytesSent = 0;
+  let transferSpeed = 0;
+  let lastMeasureTime = Date.now();
+  let lastMeasureSize = 0;
+  let lastUiUpdate = 0;
+
+  ch.bufferedAmountLowThreshold = BUFFER_LOW_WATER;
+  ch.send(encodeControlMessage({ type: "transfer:start", filename: file.name, filesize: file.size, chunkSize }));
+
+  const updateProgress = (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastUiUpdate < UI_UPDATE_INTERVAL_MS) return;
+
+    const elapsed = (now - lastMeasureTime) / 1000;
+    if (elapsed >= 0.5) {
+      transferSpeed = (bytesSent - lastMeasureSize) / elapsed;
+      lastMeasureTime = now;
+      lastMeasureSize = bytesSent;
+    }
+
+    const percentage = file.size ? Math.min(100, Math.floor((bytesSent / file.size) * 100)) : 100;
+    sendProgressBar.style.width = `${percentage}%`;
+    sendTransferStatus.textContent =
+      transferSpeed > 0 ? `SENDING ${percentage}% - ${formatSpeed(transferSpeed)}` : `SENDING ${percentage}%`;
+    lastUiUpdate = now;
+  };
+
+  const sendChunk = (chunk: Uint8Array<ArrayBuffer>) => {
+    ch.send(chunk);
+    bytesSent += chunk.byteLength;
+    updateProgress();
+  };
+
+  try {
+    while (!signal.aborted) {
+      while (pending.byteLength >= chunkSize) {
+        sendChunk(pending.slice(0, chunkSize));
+        pending = pending.slice(chunkSize);
+
+        if (ch.bufferedAmount >= BUFFER_HIGH_WATER) {
+          await waitForBufferLow(ch, signal);
+        }
+      }
+
+      const result = await reader.read();
+      if (result.done) break;
+
+      const next = result.value;
+      if (!pending.byteLength) {
+        pending = next;
+      } else {
+        const combined = new Uint8Array(pending.byteLength + next.byteLength);
+        combined.set(pending);
+        combined.set(next, pending.byteLength);
+        pending = combined;
+      }
+    }
+
+    if (signal.aborted) throw new DOMException("Transfer cancelled", "AbortError");
+    if (pending.byteLength) sendChunk(pending);
+    await waitForBufferLow(ch, signal);
+    ch.send(encodeControlMessage({ type: "transfer:complete", bytesSent }));
+    sendProgressBar.style.width = "100%";
+    sendTransferStatus.textContent = "TRANSFER COMPLETE";
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    if (ch.readyState === "open") {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        ch.send(encodeControlMessage({ type: "transfer:cancel" }));
+      } else {
+        const message = error instanceof Error ? error.message : "Transfer failed";
+        ch.send(encodeControlMessage({ type: "transfer:error", message }));
+      }
+    }
+    if (error instanceof DOMException && error.name === "AbortError") {
+      sendTransferStatus.textContent = "TRANSFER CANCELLED";
+    } else {
+      sendTransferStatus.textContent = "TRANSFER FAILED";
+    }
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
+};
 
 const handleFileSelect = async (file: File) => {
   clearInterval(heartbeatInterval);
@@ -67,6 +223,7 @@ const handleFileSelect = async (file: File) => {
   sendFilename.textContent = file.name;
   sendFilesize.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
   sendCode.value = transferId;
+  resetSendProgress();
 
   switchSendStates(sendStates, "ready");
 
@@ -103,33 +260,44 @@ const handleFileSelect = async (file: File) => {
     }
   };
 
+  p.onconnectionstatechange = () => {
+    if (p.connectionState === "failed" || p.connectionState === "disconnected") {
+      sendTransferStatus.textContent = "CONNECTION LOST";
+      abortTransfer?.();
+    }
+  };
+
   p.ondatachannel = event => {
-    const channel = event.channel;
-    channel.onopen = () => {
-      file.arrayBuffer().then(buf => {
-        let buffer = buf;
+    if (event.channel.label !== DATA_CHANNEL_LABEL) {
+      event.channel.close();
+      return;
+    }
 
-        const send = () => {
-          if (!buffer.byteLength) {
-            channel.send("done");
-            return;
-          }
-          const chunk = buffer.slice(0, CHUNK_SIZE);
-          buffer = buffer.slice(CHUNK_SIZE);
-          channel.send(chunk);
+    const ch = event.channel;
+    channel = ch;
 
-          if (channel.bufferedAmount > channel.bufferedAmountLowThreshold) {
-            channel.onbufferedamountlow = () => {
-              channel.onbufferedamountlow = null;
-              send();
-            };
-          } else {
-            send();
-          }
-        };
+    ch.onopen = () => {
+      const controller = new AbortController();
+      abortTransfer = () => controller.abort();
+      void streamFile(file, ch, p, controller.signal).catch(() => undefined);
+    };
 
-        send();
-      });
+    ch.onmessage = event => {
+      const controlMessage = parseControlMessage(event.data);
+      if (controlMessage?.type === "transfer:cancel") {
+        abortTransfer?.();
+      }
+    };
+
+    ch.onclose = () => {
+      ch.onmessage = null;
+      channel = null;
+      abortTransfer = null;
+    };
+
+    ch.onerror = () => {
+      sendTransferStatus.textContent = "TRANSFER FAILED";
+      abortTransfer?.();
     };
   };
 };
