@@ -51,4 +51,4 @@ jobs:
           script: |
             cd Development/file2p/server
             git pull
-            pm2 restart file2p-server
+            ~/.local/share/pnpm/pm2 restart file2p-server
