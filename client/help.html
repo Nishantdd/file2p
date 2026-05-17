@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File2P Help</title>
+    <link rel="stylesheet" href="/styles/index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+  </head>
+
+  <body class="block h-dvh overflow-hidden bg-card bg-none">
+    <main class="flex h-dvh w-full flex-col bg-card">
+      <header
+        class="grid h-18 shrink-0 grid-cols-[auto_1fr_auto] items-center border-b-4 bg-accent-1 px-5 py-3 sm:h-22 sm:px-8">
+        <a href="/" class="btn bg-card px-4 py-2 text-sm sm:text-base">BACK</a>
+        <h1 class="px-4 text-center text-3xl font-semibold tracking-tight text-white text-shadow-brutal sm:text-5xl">
+          FILE2P HELP
+        </h1>
+        <div class="w-16 sm:w-22"></div>
+      </header>
+
+      <article
+        class="h-[calc(100dvh-4.5rem)] overflow-y-auto bg-card px-6 py-10 sm:h-[calc(100dvh-5.5rem)] sm:px-8 sm:py-14">
+        <div
+          class="mx-auto max-w-3xl [&_h2]:mb-4 [&_h2]:text-3xl [&_h2]:leading-tight [&_h2]:font-extrabold [&_h2]:uppercase [&_li]:text-lg [&_li]:leading-relaxed [&_li]:font-semibold [&_p]:text-lg [&_p]:leading-relaxed [&_p]:font-semibold [&_section]:border-t-4 [&_section]:pt-8 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6">
+          <section class="mb-12 border-t-0! pt-0">
+            <p class="text-2xl! font-bold! sm:text-3xl!">
+              File2P transfers files directly between browsers. The server helps both devices connect; it does not store
+              your file.
+            </p>
+          </section>
+
+          <div class="space-y-12">
+            <section>
+              <h2>What is peer-to-peer transfer?</h2>
+              <p>
+                Peer-to-peer means the sender browser talks directly to the receiver browser. File2P uses WebRTC data
+                channels for this. The file is streamed in chunks from the sender tab to the receiver tab.
+              </p>
+            </section>
+
+            <section>
+              <h2>What does the server do?</h2>
+              <p>
+                The server is only a signaling server. It receives temporary connection messages, the transfer code,
+                file name, and file size. It does not receive or store the file contents.
+              </p>
+            </section>
+
+            <section>
+              <h2>Why is same WiFi faster?</h2>
+              <p>
+                When both devices are on the same network, WebRTC can usually send traffic through the local router.
+                That avoids the internet path and can be much faster than your ISP or mobile data speed.
+              </p>
+            </section>
+
+            <section>
+              <h2>Why is mobile data slower?</h2>
+              <p>
+                Mobile networks often use strict NAT, carrier-grade NAT, and unstable UDP routing. WebRTC may still
+                connect, but throughput can drop hard. Uploading from a phone on mobile data is usually the weakest
+                case.
+              </p>
+            </section>
+
+            <section>
+              <h2>What should I do on phones?</h2>
+              <ul>
+                <li>Keep the sender tab open until the transfer completes.</li>
+                <li>After sharing the link, return to the sender tab.</li>
+                <li>Do not lock the sender device during transfer.</li>
+                <li>If mobile data stalls, put both devices on the same WiFi.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2>Can I close or reload the page?</h2>
+              <p>
+                Not during transfer. The sender tab is the source of the file, and the receiver tab is writing the file.
+                Reloading either side stops the active transfer.
+              </p>
+            </section>
+
+            <section>
+              <h2>Why did the transfer stop?</h2>
+              <ul>
+                <li>The sender tab was closed, reloaded, or backgrounded by the device.</li>
+                <li>The network changed during transfer.</li>
+                <li>The browser paused the tab to save battery.</li>
+                <li>The mobile carrier degraded or blocked the WebRTC path.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2>Are files stored in the cloud?</h2>
+              <p>
+                No. There is no upload storage. If the sender leaves, the file is gone from the transfer. The receiver
+                can only download while the sender is online.
+              </p>
+            </section>
+
+            <section>
+              <h2>Which browsers work best?</h2>
+              <p>
+                Chromium browsers generally handle large downloads better because they can stream directly to disk in
+                some cases. Firefox and Safari work, but may keep more received data in memory until the download
+                finishes.
+              </p>
+            </section>
+
+            <section>
+              <h2>Can I send folders?</h2>
+              <p>
+                Not directly. Compress the folder into a zip file first, then send the zip. File2P transfers one
+                selected file at a time.
+              </p>
+            </section>
+          </div>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>
