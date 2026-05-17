@@ -75,7 +75,7 @@
               </div>
               <input id="send-code" type="text" readonly class="input-code" />
               <div class="flex w-full gap-4">
-                <button id="send-copy-btn" class="btn flex-1 btn-primary">COPY CODE</button>
+                <button id="send-copy-btn" class="btn flex-1 btn-primary">COPY LINK</button>
                 <button id="send-reset-btn" class="btn flex-1">CHANGE FILE</button>
               </div>
             </div>
@@ -139,7 +139,10 @@
               <div id="receive-filename" class="max-w-48 min-w-0 truncate badge bg-accent-3"></div>
               <div id="receive-filesize" class="shrink-0 truncate badge bg-accent-5 text-white"></div>
             </div>
-            <button id="receive-download-btn" class="mt-4 btn btn-primary">DOWNLOAD NOW</button>
+            <div class="mt-4 flex w-full gap-4">
+              <button id="receive-download-btn" class="btn flex-1 btn-primary">DOWNLOAD NOW</button>
+              <button id="receive-cancel-ready" class="btn flex-1">CANCEL</button>
+            </div>
           </div>
 
           <!--Download state-->

@@ -29,6 +29,7 @@ let currentSocket: WebSocket | null = null;
 let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
 let abortTransfer: (() => void) | null = null;
 let transferCompleted = false;
+let currentShareLink = "";
 
 const generateTransferId = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -264,6 +265,7 @@ const handleFileSelect = async (file: File) => {
   const transferId = generateTransferId();
   const link = new URL(`/?transferId=${encodeURIComponent(transferId)}`, config.APP_ADDR).toString();
   const qrSvg = await generateQR(link);
+  currentShareLink = link;
 
   sendQR.innerHTML = qrSvg;
   sendFilename.textContent = file.name;
@@ -332,7 +334,7 @@ fileInput.addEventListener("change", e => {
 
 sendCopyBtn.addEventListener("click", async () => {
   sendCopyBtn.disabled = true;
-  await navigator.clipboard.writeText(sendCode.value);
+  await navigator.clipboard.writeText(currentShareLink || sendCode.value);
   const prev = sendCopyBtn.textContent;
   sendCopyBtn.textContent = "COPIED!";
   setTimeout(() => {
@@ -346,6 +348,7 @@ sendResetBtn.addEventListener("click", () => {
   clearInterval(heartbeatInterval);
   closePeer();
   closeSocket();
+  currentShareLink = "";
   resetSendProgress();
   switchSendStates(sendStates, "upload");
 });

@@ -20,6 +20,7 @@ const retryCerrBtn = document.getElementById("receive-retry-cerr") as HTMLButton
 const receiveFilename = document.getElementById("receive-filename") as HTMLElement;
 const receiveFilesize = document.getElementById("receive-filesize") as HTMLElement;
 const downloadBtn = document.getElementById("receive-download-btn") as HTMLButtonElement;
+const cancelReadyBtn = document.getElementById("receive-cancel-ready") as HTMLButtonElement;
 const progressBar = document.getElementById("receive-progress-bar") as HTMLDivElement;
 const progressPct = document.getElementById("receive-progress-pct") as HTMLElement;
 const progressTnf = document.getElementById("receive-progress-tnf") as HTMLElement;
@@ -334,6 +335,13 @@ cancelDlBtn.addEventListener("click", () => {
 });
 
 downloadBtn.addEventListener("click", handleDownload);
+
+cancelReadyBtn.addEventListener("click", () => {
+  cleanup();
+  syncUrl(null);
+  codeInput.value = "";
+  switchReceiveStates(receiveStates, "input");
+});
 
 retryDerrBtn.addEventListener("click", () => {
   cleanup();
