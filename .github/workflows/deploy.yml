@@ -51,4 +51,5 @@ jobs:
           script: |
             cd Development/file2p/server
             git pull
-            ~/.local/share/pnpm/pm2 restart file2p-server
+            /home/ubuntu/.bun/bin/bun install --production
+            sudo systemctl restart file2p-server
