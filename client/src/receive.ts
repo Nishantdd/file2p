@@ -52,8 +52,16 @@ export let transferSpeed = 0;
 let lastMeasureTime = 0;
 let lastMeasureSize = 0;
 let lastUiUpdate = 0;
+let isTransferInProgress = false;
 
 const LABEL_THRESHOLD = 11;
+
+const warnBeforeTransferUnload = (event: BeforeUnloadEvent) => {
+  if (!isTransferInProgress) return;
+  event.preventDefault();
+};
+
+window.addEventListener("beforeunload", warnBeforeTransferUnload);
 
 const setReceiveFooterStatus = (label: string, state: "online" | "offline") => {
   receiveFooterLabel.textContent = label;
@@ -71,6 +79,7 @@ const closeTransferPeer = (notifyCancel: boolean) => {
     channel.close();
     channel = null;
   }
+  isTransferInProgress = false;
   if (peer) {
     peer.onicecandidate = null;
     peer.onconnectionstatechange = null;
@@ -191,6 +200,7 @@ const handleDownload = async () => {
   progressPct.style.left = "0%";
   progressPct.style.transform = "translate(8px, -50%)";
   progressTnf.textContent = "...";
+  isTransferInProgress = true;
 
   switchReceiveStates(receiveStates, "dl");
   let writerQueue = Promise.resolve();
@@ -246,6 +256,7 @@ const handleDownload = async () => {
     }
 
     dataArray = [];
+    isTransferInProgress = false;
     downloadBtn.disabled = false;
     setReceiveFooterStatus("Sender online", "online");
     switchReceiveStates(receiveStates, "input");
@@ -266,12 +277,14 @@ const handleDownload = async () => {
           void fileWriter?.abort?.();
           fileWriter = null;
           closeTransferPeer(false);
+          isTransferInProgress = false;
           switchReceiveStates(receiveStates, "derr");
         });
       } else if (controlMessage.type === "transfer:error" || controlMessage.type === "transfer:cancel") {
         void fileWriter?.abort?.();
         fileWriter = null;
         closeTransferPeer(false);
+        isTransferInProgress = false;
         switchReceiveStates(receiveStates, "derr");
       }
       return;
@@ -287,6 +300,7 @@ const handleDownload = async () => {
           void fileWriter?.abort?.();
           fileWriter = null;
           closeTransferPeer(false);
+          isTransferInProgress = false;
           switchReceiveStates(receiveStates, "derr");
         });
     } else {
@@ -300,6 +314,7 @@ const handleDownload = async () => {
     void fileWriter?.abort?.();
     fileWriter = null;
     closeTransferPeer(false);
+    isTransferInProgress = false;
     switchReceiveStates(receiveStates, "derr");
   };
 

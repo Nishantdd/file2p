@@ -30,6 +30,14 @@ let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
 let abortTransfer: (() => void) | null = null;
 let transferCompleted = false;
 let currentShareLink = "";
+let isTransferInProgress = false;
+
+const warnBeforeTransferUnload = (event: BeforeUnloadEvent) => {
+  if (!isTransferInProgress) return;
+  event.preventDefault();
+};
+
+window.addEventListener("beforeunload", warnBeforeTransferUnload);
 
 const generateTransferId = (): string => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -47,6 +55,7 @@ const closePeer = () => {
     channel.close();
     channel = null;
   }
+  isTransferInProgress = false;
   if (!peer) return;
   peer.onicecandidate = null;
   peer.ondatachannel = null;
@@ -153,6 +162,7 @@ const createHostPeer = (socket: WebSocket, file: File) => {
     setSendFooterStatus("Receiver online", "connected");
 
     ch.onopen = () => {
+      isTransferInProgress = true;
       const controller = new AbortController();
       abortTransfer = () => controller.abort();
       void streamFile(file, ch, p, controller.signal).catch(() => undefined);
@@ -169,10 +179,12 @@ const createHostPeer = (socket: WebSocket, file: File) => {
       ch.onmessage = null;
       channel = null;
       abortTransfer = null;
+      isTransferInProgress = false;
     };
 
     ch.onerror = () => {
       setSendFooterStatus("No receiver", "idle");
+      isTransferInProgress = false;
       abortTransfer?.();
     };
   };
@@ -235,6 +247,7 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
     await waitForBufferLow(ch, signal);
     ch.send(encodeControlMessage({ type: "transfer:complete", bytesSent }));
     transferCompleted = true;
+    isTransferInProgress = false;
     setSendFooterStatus("Download Completed", "complete", 100);
   } catch (error) {
     await reader.cancel().catch(() => undefined);
@@ -251,6 +264,7 @@ const streamFile = async (file: File, ch: RTCDataChannel, p: RTCPeerConnection, 
     } else {
       setSendFooterStatus("No receiver", "idle");
     }
+    isTransferInProgress = false;
     throw error;
   } finally {
     reader.releaseLock();
