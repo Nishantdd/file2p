@@ -79,6 +79,15 @@ const resetSendProgress = () => {
   setSendFooterStatus("No receiver", "idle");
 };
 
+const shouldShowMobileSenderNote = () =>
+  /android|iphone|ipad|ipod/i.test(navigator.userAgent) && !sessionStorage.getItem("file2p-mobile-sender-note-shown");
+
+const showMobileSenderNote = () => {
+  if (!shouldShowMobileSenderNote()) return;
+  sessionStorage.setItem("file2p-mobile-sender-note-shown", "true");
+  window.alert("After sharing the link, please come back to this tab and keep it open until the transfer completes.");
+};
+
 const waitForBufferLow = (ch: RTCDataChannel, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
     if (ch.bufferedAmount <= ch.bufferedAmountLowThreshold) {
@@ -288,6 +297,7 @@ const handleFileSelect = async (file: File) => {
   resetSendProgress();
 
   switchSendStates(sendStates, "ready");
+  showMobileSenderNote();
 
   const wsUrl = new URL(config.SERVER_ADDR);
   wsUrl.searchParams.set("role", "host");
